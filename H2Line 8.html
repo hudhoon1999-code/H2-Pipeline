@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="H2 Line">
+<meta name="theme-color" content="#0A0A0F">
+<title>H2 Line</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='38' fill='%236366F1'/><text y='125' x='90' text-anchor='middle' font-size='96' font-family='system-ui' font-weight='800' fill='white'>H</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --a:#6366F1;--as:rgba(99,102,241,.13);--ag:rgba(99,102,241,.28);
+  --ok:#10B981;--oks:rgba(16,185,129,.13);
+  --warn:#F59E0B;--warns:rgba(245,158,11,.13);
+  --err:#EF4444;--errs:rgba(239,68,68,.13);
+  --gst:#8B5CF6;--gsts:rgba(139,92,246,.14);
+  --case:#0EA5E9;--cases:rgba(14,165,233,.13);
+  --half:#F472B6;--halfs:rgba(244,114,182,.13);
+  --rl:20px;--rm:14px;--rs:10px;--rx:7px;
+  --tr:220ms cubic-bezier(.4,0,.2,1);
+  --safe:env(safe-area-inset-bottom,16px)
+}
+.dark{--bg:#0A0A0F;--s:#141420;--s2:#1C1C2C;--s3:#252535;--b:rgba(255,255,255,.07);--t:#F0F0FF;--t2:#8888AA;--t3:#555570;--nav:rgba(12,12,20,.96)}
+.light{--bg:#F4F4F8;--s:#FFFFFF;--s2:#F0F0F6;--s3:#E6E6F0;--b:rgba(0,0,0,.07);--t:#0A0A12;--t2:#6B6B80;--t3:#9999AA;--nav:rgba(255,255,255,.96)}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--t);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif}
+input,select,textarea,button{font-family:'Nunito',sans-serif}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:99px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fu{animation:fadeUp .28s ease both}
+.su{animation:slideUp .3s ease both}
+.stag>*{animation:fadeUp .28s ease both}
+.stag>*:nth-child(1){animation-delay:0ms}
+.stag>*:nth-child(2){animation-delay:50ms}
+.stag>*:nth-child(3){animation-delay:100ms}
+.stag>*:nth-child(4){animation-delay:150ms}
+.stag>*:nth-child(5){animation-delay:200ms}
+#app{min-height:100vh;display:flex;flex-direction:column}
+#topbar{position:sticky;top:0;z-index:200;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b);padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 120px;max-width:780px;margin:0 auto;width:100%}
+#bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--b);display:flex;padding:6px 2px;padding-bottom:calc(6px + var(--safe))}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 1px;background:none;border:none;cursor:pointer;color:var(--t3);font-size:9px;font-weight:600;transition:color var(--tr);-webkit-tap-highlight-color:transparent}
+.nb.on{color:var(--a)}
+.ndot{width:3px;height:3px;border-radius:50%;background:var(--a);opacity:0;transition:opacity var(--tr)}
+.nb.on .ndot{opacity:1}
+#fab{position:fixed;bottom:calc(72px + var(--safe));right:18px;width:56px;height:56px;border-radius:50%;background:var(--a);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px var(--ag);z-index:150;transition:all var(--tr);-webkit-tap-highlight-color:transparent}
+#fab:active{transform:scale(.93)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;cursor:pointer;font-weight:500;transition:all var(--tr);-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.bp{background:var(--a);color:#fff;border-radius:var(--rs);padding:12px 20px;font-size:15px;box-shadow:0 2px 12px var(--ag)}
+.bg2{background:transparent;color:var(--t2);border-radius:var(--rs);padding:9px 14px;font-size:13px}
+.bg2:hover{background:var(--s2);color:var(--t)}
+.bs{background:var(--s2);color:var(--t);border-radius:var(--rs);padding:10px 16px;font-size:13px}
+.bs:hover{background:var(--s3)}
+.bd{background:var(--errs);color:var(--err);border-radius:var(--rs);padding:10px 16px;font-size:13px}
+.bsuc{background:var(--ok);color:#fff;border-radius:var(--rs);padding:12px 20px;font-size:15px}
+.bw{width:100%}
+.bic{width:36px;height:36px;padding:0;border-radius:var(--rs);background:var(--s2);color:var(--t2)}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:18px}
+.csm{padding:14px;border-radius:var(--rm)}
+.chov{transition:border-color var(--tr),box-shadow var(--tr)}
+.chov:hover{border-color:var(--a);box-shadow:0 4px 20px var(--as)}
+.iw{display:flex;flex-direction:column;gap:5px}
+.il{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.06em;text-transform:uppercase}
+.inp{background:var(--s2);border:1.5px solid var(--b);border-radius:var(--rs);padding:11px 13px;font-size:15px;color:var(--t);width:100%;transition:all var(--tr);outline:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--a);background:var(--s);box-shadow:0 0 0 3px var(--as)}
+.inp::placeholder{color:var(--t3)}
+select.inp{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888AA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea.inp{resize:vertical;min-height:70px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.bpaid{background:var(--oks);color:var(--ok)}
+.bpend{background:var(--warns);color:var(--warn)}
+.bpart{background:var(--as);color:var(--a)}
+.bgst{background:var(--gsts);color:var(--gst)}
+.bcase{background:var(--cases);color:var(--case)}
+.bhalf{background:var(--halfs);color:var(--half)}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:500;background:var(--s2);color:var(--t2)}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kcard{background:var(--s);border:1px solid var(--b);border-radius:var(--rm);padding:14px}
+.klbl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.kval{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.ksub{font-size:11px;color:var(--t2);margin-top:3px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--rm);border:1px solid var(--b)}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{background:var(--s2);color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;text-align:left;white-space:nowrap}
+.dt td{padding:11px 12px;border-top:1px solid var(--b);color:var(--t);vertical-align:middle}
+.dt tr:hover td{background:var(--s2)}
+.nr{text-align:right;font-variant-numeric:tabular-nums}
+.cbw{display:flex;align-items:flex-end;gap:5px;height:72px}
+.cb{flex:1;border-radius:3px 3px 0 0;transition:background var(--tr);min-width:6px}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.msh{background:var(--s);border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 18px calc(28px + var(--safe));animation:slideUp .3s ease}
+.mhan{width:34px;height:4px;background:var(--s3);border-radius:99px;margin:8px auto 14px}
+.mtit{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+.acw{position:relative}
+.acd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s);border:1.5px solid var(--b);border-radius:var(--rs);z-index:400;max-height:180px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);display:none}
+.aci{padding:10px 13px;cursor:pointer;font-size:14px;transition:background var(--tr)}
+.aci:hover{background:var(--s2);color:var(--a)}
+.srchw{position:relative}
+.srchi{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.srchin{padding-left:34px !important}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 20px;gap:10px;text-align:center}
+.eico{font-size:38px;opacity:.35}
+.etit{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700}
+.esub{font-size:13px;color:var(--t2);max-width:220px}
+.authbg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.st{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}
+.li{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--b)}
+.li:last-child{border-bottom:none}
+.lav{width:38px;height:38px;border-radius:var(--rs);background:var(--as);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ltit{font-size:14px;font-weight:500}
+.lsub{font-size:11px;color:var(--t2)}
+.lrt{margin-left:auto;text-align:right}
+.fg{display:grid;gap:14px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pb{height:3px;background:var(--s2);border-radius:99px;overflow:hidden}
+.pf{height:100%;border-radius:99px;transition:width .5s ease}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:600;background:var(--s2);color:var(--t2);cursor:pointer;border:1.5px solid transparent;transition:all var(--tr);-webkit-tap-highlight-color:transparent}
+.chip.on{background:var(--as);color:var(--a);border-color:var(--a)}
+.aline{width:28px;height:3px;background:var(--a);border-radius:99px;margin-bottom:14px}
+.gstrow{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.ptbox{background:var(--s2);border-radius:var(--rm);padding:12px;margin-top:4px}
+.ptrow{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b)}
+.ptrow:last-child{border-bottom:none}
+.ptlbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.ptval{font-size:14px;font-weight:700}
+.spin{animation:spin 1s linear infinite;display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%}
+#toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%) translateY(-10px);background:var(--t);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.viewer-badge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:14px;z-index:999;background:var(--warn);color:#000;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.05em;pointer-events:none}
+.share-tog input{width:44px;height:26px;appearance:none;-webkit-appearance:none;background:var(--s3);border-radius:99px;position:relative;cursor:pointer;transition:background var(--tr)}
+.share-tog input:checked{background:var(--a)}
+.share-tog input::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform var(--tr);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.share-tog input:checked::after{transform:translateX(18px)}
+.slink{background:var(--s2);border:1.5px solid var(--b);border-radius:var(--rs);padding:10px 13px;font-size:12px;font-family:monospace;word-break:break-all;color:var(--t2);margin-top:8px;cursor:pointer}
+.slink:hover{border-color:var(--a)}
+@media(min-width:600px){.kgrid{grid-template-columns:repeat(4,1fr)}.mov{align-items:center}.msh{border-radius:22px;max-height:88vh}}
+</style>
+</head>
+<body class="dark">
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const db = {
+  get: (k, d=null) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} }
+};
+const money = (n, currency) => {
+  const code = String(currency || STATE?.currency || db.get('currency','MVR') || 'MVR').toUpperCase();
+  const v = Number(n || 0);
+  if (code === 'MVR') return 'Rf ' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  try { return new Intl.NumberFormat('en', { style: 'currency', currency: code, currencyDisplay: 'symbol', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v); }
+  catch { return code + ' ' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+};
+const fmt2 = n => Number(n||0).toFixed(2);
+const GST_RATE = 8;
+
+// Week helpers (Sat=start Thu=end)
+function weekStart(ds) {
+  const d = new Date(ds), day = d.getDay();
+  const diff = day===6 ? 0 : -(day+1);
+  const s = new Date(d); s.setDate(d.getDate()+diff);
+  return s.toISOString().split('T')[0];
+}
+function weekLabel(ds) {
+  const d = new Date(ds), day = d.getDay();
+  const diff = day===6 ? 0 : -(day+1);
+  const s = new Date(d); s.setDate(d.getDate()+diff);
+  const e = new Date(s); e.setDate(s.getDate()+5);
+  const f = x => x.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+  return f(s) + ' \u2013 ' + f(e);
+}
+
+// GST helpers
+function calcGST(lineTotal, inclusive) {
+  const t = parseFloat(lineTotal)||0;
+  if (inclusive) {
+    const base = t/1.08;
+    return { base:+base.toFixed(2), gst:+(t-base).toFixed(2), total:t };
+  }
+  const gst = t*0.08;
+  return { base:t, gst:+gst.toFixed(2), total:+(t+gst).toFixed(2) };
+}
+
+// Price tier helpers
+function calcTiers(input) {
+  // FIXED: Unit price alone → NO auto-calc for half/case
+  // Case price given → half = case/2 if not explicitly set
+  if (input && typeof input === 'object') {
+    const u = parseFloat(input.unitPrice) || 0;
+    const cRaw = (input.casePrice !== undefined && input.casePrice !== null && String(input.casePrice).trim() !== '') ? parseFloat(input.casePrice) : null;
+    const hRaw = (input.halfPrice !== undefined && input.halfPrice !== null && String(input.halfPrice).trim() !== '') ? parseFloat(input.halfPrice) : null;
+    const c = cRaw || 0;
+    const h2 = hRaw !== null ? hRaw : (cRaw !== null && cRaw > 0 ? +(cRaw / 2).toFixed(2) : 0);
+    return { unit: u, halfDozen: h2, casePrice: c };
+  }
+  const u = parseFloat(input) || 0;
+  return { unit: u, halfDozen: 0, casePrice: 0 }; // NO auto-calc from unit alone
+}
+function getTierPrice(item, ptype) {
+  const tiers = calcTiers(item);
+  return ptype === 'halfDozen' ? tiers.halfDozen : ptype === 'casePrice' ? tiers.casePrice : tiers.unit;
+}
+function tierLabel(t) {
+  if (t==='casePrice') return 'Case (12)';
+  if (t==='halfDozen') return 'Half Dozen (6)';
+  return 'Unit';
+}
+
+// Toast
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── SEED DATA ──────────────────────────────────────────────────────────────
+function seedData() {
+  if (db.get('seeded3')) return;
+  const today = new Date().toISOString().split('T')[0];
+  db.set('items', [
+    {id:uid(),name:'Fresh Milk 1L',category:'Dairy',unitPrice:65},
+    {id:uid(),name:'Butter 500g',category:'Dairy',unitPrice:280},
+    {id:uid(),name:'Orange Juice 1L',category:'Beverages',unitPrice:110},
+    {id:uid(),name:'Mineral Water 1L',category:'Beverages',unitPrice:20},
+    {id:uid(),name:'White Bread',category:'Bakery',unitPrice:45},
+  ]);
+  db.set('shops', [
+    {id:uid(),name:'Al Noor Mart',owner:'Ahmed Ali',contact:'9876543210',area:'Bur Dubai',priority:'High',notes:''},
+    {id:uid(),name:'Sunrise Superstore',owner:'Ravi Kumar',contact:'9123456789',area:'Deira',priority:'Medium',notes:''},
+    {id:uid(),name:'City Fresh Market',owner:'Sara Hassan',contact:'9988776655',area:'Karama',priority:'High',notes:''},
+  ]);
+  db.set('sales', [
+    {id:uid(),shopName:'Al Noor Mart',area:'Bur Dubai',invoiceId:'INV-001',date:today,itemName:'Fresh Milk 1L',category:'Dairy',priceType:'casePrice',quantity:2,unitPrice:65,lineTotal:1464.40,gstInclusive:false,gstRate:8,gstAmt:109.40,finalTotal:1573.80,paymentStatus:'Paid',notes:''},
+    {id:uid(),shopName:'Al Noor Mart',area:'Bur Dubai',invoiceId:'INV-001',date:today,itemName:'Butter 500g',category:'Dairy',priceType:'unit',quantity:5,unitPrice:280,lineTotal:1400,gstInclusive:false,gstRate:8,gstAmt:112,finalTotal:1512,paymentStatus:'Paid',notes:''},
+    {id:uid(),shopName:'Sunrise Superstore',area:'Deira',invoiceId:'INV-002',date:today,itemName:'Orange Juice 1L',category:'Beverages',priceType:'halfDozen',quantity:3,unitPrice:110,lineTotal:1920.60,gstInclusive:true,gstRate:8,gstAmt:142.27,finalTotal:1920.60,paymentStatus:'Pending',notes:'GST included'},
+    {id:uid(),shopName:'City Fresh Market',area:'Karama',invoiceId:'INV-003',date:today,itemName:'Mineral Water 1L',category:'Beverages',priceType:'unit',quantity:50,unitPrice:20,lineTotal:1000,gstInclusive:false,gstRate:8,gstAmt:80,finalTotal:1080,paymentStatus:'Pending',notes:''},
+  ]);
+  db.set('seeded3', true);
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let STATE = {
+  dark: db.get('dark', true),
+  user: db.get('user'),
+  page: 'dashboard',
+  sales: db.get('sales', []),
+  items: db.get('items', []),
+  shops: db.get('shops', []),
+  currency: db.get('currency', 'MVR'),
+  modal: null,
+  isViewer: false,
+};
+
+let SHARE = db.get('shareState', {
+  enabled: false,
+  shareId: null,
+  lastPushed: null,
+  perms: {dashboard:true, sales:true, invoices:true, report:true, shops:false, items:false}
+});
+
+let itemsMassMode = false;
+let selectedItems = new Set();
+let shopsMassMode = false;
+let selectedShops = new Set();
+
+function setCurrency(code) {
+  const c = String(code || 'MVR').trim().toUpperCase();
+  STATE.currency = c || 'MVR';
+  db.set('currency', STATE.currency);
+  saveState();
+  render();
+}
+
+const FIREBASE_URL = 'https://h2line-share-default-rtdb.firebaseio.com';
+const VIEW_ID = new URLSearchParams(window.location.search).get('view');
+
+function saveState() {
+  db.set('sales', STATE.sales);
+  db.set('items', STATE.items);
+  db.set('shops', STATE.shops);
+  db.set('currency', STATE.currency || 'MVR');
+  db.set('dark', STATE.dark);
+  autoSync();
+}
+
+// ── ICONS ──────────────────────────────────────────────────────────────────
+const IC = {
+  home: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  sales: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  shop: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M8 9V7a4 4 0 018 0v2"/></svg>',
+  items: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>',
+  report: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  inv: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+  plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  srch: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>',
+  chk: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  sun: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>',
+  cog: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+  dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  ul: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  share: '\uD83D\uDD17',
+};
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('app');
+  if (!root) return;
+  document.body.className = STATE.dark ? 'dark' : 'light';
+  if (!STATE.user) { root.innerHTML = renderAuth(); bindAuth(); return; }
+  const viewerFab = STATE.isViewer ? '' : renderFab();
+  root.innerHTML = renderTopBar() + '<div id="content" class="fu">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
+  bindPage();
+  if (STATE.modal) bindModal();
+}
+
+// ── AUTH ────────────────────────────────────────────────────────────────────
+let authMode = 'login';
+function renderAuth() {
+  return '<div class="authbg"><div style="width:100%;max-width:400px" class="fu">' +
+    '<div style="font-family:Outfit,sans-serif;font-size:30px;font-weight:800;color:var(--a);margin-bottom:6px">H2 Line</div>' +
+    '<div style="font-size:14px;color:var(--t2);margin-bottom:28px">Distribution sales, simplified.</div>' +
+    '<div class="card"><div style="display:flex;gap:6px;margin-bottom:20px">' +
+    '<button id="tab-login" onclick="switchTab(\'login\')" style="flex:1;padding:10px;border-radius:var(--rs);border:none;cursor:pointer;font-weight:700;font-size:14px;background:var(--a);color:#fff">Log In</button>' +
+    '<button id="tab-signup" onclick="switchTab(\'signup\')" style="flex:1;padding:10px;border-radius:var(--rs);border:none;cursor:pointer;font-weight:700;font-size:14px;background:var(--s2);color:var(--t2)">Sign Up</button>' +
+    '</div><div class="fg">' +
+    '<div class="iw" id="name-row" style="display:none"><label class="il">Full Name</label><input id="a-name" class="inp" placeholder="Your name"></div>' +
+    '<div class="iw"><label class="il">Email</label><input id="a-email" class="inp" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
+    '<div class="iw" style="position:relative"><label class="il">Password</label><input id="a-pw" class="inp" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" style="padding-right:44px" autocomplete="current-password">' +
+    '<button onclick="togglePw()" style="position:absolute;right:8px;top:26px;background:none;border:none;cursor:pointer;color:var(--t2);padding:6px">\uD83D\uDC41</button></div>' +
+    '<div id="a-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px"></div>' +
+    '<button id="a-submit" onclick="doAuth()" class="btn bp bw" style="height:48px">Log In</button>' +
+    '<button onclick="switchTab(\'forgot\')" class="btn bg2 bw" style="font-size:13px">Forgot password?</button>' +
+    '</div></div>' +
+    '<div style="text-align:center;margin-top:14px;font-size:11px;color:var(--t3)">\uD83D\uDD12 Secure per-account storage \u00b7 Add to Home Screen for app experience</div>' +
+    '</div></div>';
+}
+function switchTab(m) {
+  authMode = m;
+  const nr = document.getElementById('name-row');
+  const sub = document.getElementById('a-submit');
+  const tl = document.getElementById('tab-login');
+  const ts = document.getElementById('tab-signup');
+  if (nr) nr.style.display = m === 'signup' ? 'flex' : 'none';
+  if (sub) sub.textContent = m === 'login' ? 'Log In' : m === 'signup' ? 'Create Account' : 'Send Reset Link';
+  if (tl) { tl.style.background = m === 'login' ? 'var(--a)' : 'var(--s2)'; tl.style.color = m === 'login' ? '#fff' : 'var(--t2)'; }
+  if (ts) { ts.style.background = m === 'signup' ? 'var(--a)' : 'var(--s2)'; ts.style.color = m === 'signup' ? '#fff' : 'var(--t2)'; }
+}
+function togglePw() { const i = document.getElementById('a-pw'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; }
+function showAuthMsg(msg, ok=false) {
+  const el = document.getElementById('a-msg');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = ok ? 'var(--oks)' : 'var(--errs)';
+  el.style.color = ok ? 'var(--ok)' : 'var(--err)';
+  el.textContent = msg;
+}
+function doAuth() {
+  const email = (document.getElementById('a-email')||{}).value||'';
+  const pw = (document.getElementById('a-pw')||{}).value||'';
+  const name = (document.getElementById('a-name')||{}).value||'';
+  const sub = document.getElementById('a-submit');
+  if (sub) { sub.innerHTML = '<span class="spin"></span>'; sub.disabled = true; }
+  setTimeout(() => {
+    if (sub) sub.disabled = false;
+    if (authMode === 'forgot') { showAuthMsg('\u2713 Reset link sent to ' + email, true); return; }
+    if (authMode === 'signup') {
+      if (!name||!email||!pw) { showAuthMsg('Please fill all fields.'); if(sub) sub.textContent='Create Account'; return; }
+      const users = db.get('users', []);
+      if (users.find(u => u.email === email)) { showAuthMsg('Email already registered.'); if(sub) sub.textContent='Create Account'; return; }
+      const nu = {id:uid(), name, email, password:pw};
+      db.set('users', [...users, nu]); db.set('user', nu);
+      STATE.user = nu; seedData(); render(); return;
+    }
+    const users = db.get('users', []);
+    const u = users.find(x => x.email===email && x.password===pw);
+    if (u) { db.set('user', u); STATE.user = u; seedData(); render(); }
+    else {
+      const nu = {id:uid(), name:email.split('@')[0]||'User', email, password:pw};
+      db.set('users', [...users, nu]); db.set('user', nu);
+      STATE.user = nu; seedData(); render();
+    }
+  }, 700);
+}
+function bindAuth() { document.getElementById('a-pw')?.addEventListener('keydown', e => { if(e.key==='Enter') doAuth(); }); }
+
+// ── TOP BAR ──────────────────────────────────────────────────────────────────
+function renderTopBar() {
+  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Weekly Report',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings'};
+  const shareBtn = STATE.isViewer ? '' : '<button class="btn bic" onclick="openShareModal()" style="' + (SHARE.enabled?'background:var(--as);color:var(--a)':'') + '" title="Share">\uD83D\uDD17</button>';
+  const viewerBadge = STATE.isViewer ? '<div class="viewer-badge">\uD83D\uDC41 VIEWER</div>' : '';
+  return '<div id="topbar">' +
+    '<div style="font-family:Outfit,sans-serif;font-weight:800;font-size:18px;color:var(--a)">H2 Line</div>' +
+    '<div style="width:1px;height:14px;background:var(--b)"></div>' +
+    '<div style="font-size:13px;color:var(--t2);font-weight:500;flex:1">' + (labels[STATE.page]||STATE.page) + '</div>' +
+    shareBtn +
+    '<button class="btn bic" onclick="goPage(\'settings\')" style="' + (STATE.page==='settings'?'background:var(--as);color:var(--a)':'') + '">' + IC.cog + '</button>' +
+    '</div>' + viewerBadge;
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function renderNav() {
+  const tabs = [
+    {id:'dashboard',ico:IC.home,lbl:'Home'},
+    {id:'sales',ico:IC.sales,lbl:'Sales'},
+    {id:'invoices',ico:IC.inv,lbl:'Invoices'},
+    {id:'report',ico:IC.report,lbl:'Reports'},
+    {id:'shops',ico:IC.shop,lbl:'Shops'},
+    {id:'items',ico:IC.items,lbl:'Items'},
+    {id:'importexport',ico:IC.ul,lbl:'Data'},
+  ];
+  return '<nav id="bottomnav">' + tabs.map(t =>
+    '<button class="nb' + (STATE.page===t.id?' on':'') + '" onclick="goPage(\'' + t.id + '\')">' +
+    t.ico + '<span>' + t.lbl + '</span><div class="ndot"></div></button>'
+  ).join('') + '</nav>';
+}
+function renderFab() {
+  if (['settings','importexport'].includes(STATE.page)) return '';
+  return '<button id="fab" onclick="openAddSale()">' + IC.plus + '</button>';
+}
+function goPage(p) { STATE.page = p; STATE.modal = null; render(); }
+
+// ── PAGE ROUTER ──────────────────────────────────────────────────────────────
+function renderPage() {
+  switch(STATE.page) {
+    case 'dashboard': return renderDashboard();
+    case 'sales': return renderSalesPage();
+    case 'invoices': return renderInvoices();
+    case 'report': return renderReport();
+    case 'shops': return renderShops();
+    case 'items': return renderItems();
+    case 'importexport': return renderImportExport();
+    case 'settings': return renderSettings();
+    default: return renderDashboard();
+  }
+}
+function bindPage() {
+  if (STATE.page==='sales') bindSales();
+  else if (STATE.page==='shops') bindShops();
+  else if (STATE.page==='items') bindItems();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const S = STATE.sales;
+  const total = S.reduce((a,r) => a+r.finalTotal, 0);
+  const paid = S.filter(r => r.paymentStatus==='Paid').reduce((a,r) => a+r.finalTotal, 0);
+  const pend = S.filter(r => r.paymentStatus==='Pending').reduce((a,r) => a+r.finalTotal, 0);
+  const gstTot = S.reduce((a,r) => a+(r.gstAmt||0), 0);
+  const shopMap = {};
+  S.forEach(r => { shopMap[r.shopName] = (shopMap[r.shopName]||0) + r.finalTotal; });
+  const topShops = Object.entries(shopMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const itemMap = {};
+  S.forEach(r => { itemMap[r.itemName] = (itemMap[r.itemName]||0) + r.finalTotal; });
+  const topItems = Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const wmap = {};
+  S.forEach(r => { const w=weekStart(r.date); wmap[w]=(wmap[w]||0)+r.finalTotal; });
+  const wks = Object.keys(wmap).sort().slice(-7);
+  const wdata = wks.length>=2 ? wks.map(w=>wmap[w]) : [1200,1800,1500,2400,1900,2600,total||2000];
+  const mx = Math.max(...wdata, 1);
+  const recent = [...S].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+
+  return '<div class="fu">' +
+    '<div style="margin-bottom:18px">' +
+      '<div style="font-size:12px;color:var(--t2)">' + new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}) + '</div>' +
+      '<h1 style="font-size:24px;font-weight:800;margin-top:2px">Good day \uD83D\uDC4B</h1>' +
+    '</div>' +
+    '<div class="kgrid stag" style="margin-bottom:16px">' +
+      '<div class="kcard fu"><div class="klbl">Total Sales</div><div class="kval" style="color:var(--a)">' + money(total) + '</div><div class="ksub">' + S.length + ' transactions</div></div>' +
+      '<div class="kcard fu"><div class="klbl">Collected</div><div class="kval" style="color:var(--ok)">' + money(paid) + '</div><div class="ksub">' + (total>0?Math.round(paid/total*100):0) + '% of total</div></div>' +
+      '<div class="kcard fu"><div class="klbl">Pending</div><div class="kval" style="color:var(--warn)">' + money(pend) + '</div><div class="ksub">' + S.filter(r=>r.paymentStatus==='Pending').length + ' orders</div></div>' +
+      '<div class="kcard fu"><div class="klbl">GST Collected</div><div class="kval" style="color:var(--gst)">' + money(gstTot) + '</div><div class="ksub">@ 8% rate</div></div>' +
+    '</div>' +
+    '<div class="card" style="margin-bottom:14px">' +
+      '<div class="sh"><div class="st">Weekly Trend</div><button class="btn bg2" style="font-size:11px;padding:5px 9px" onclick="goPage(\'report\')">View \u2192</button></div>' +
+      '<div class="cbw">' + wdata.map((v,i) => '<div class="cb" style="height:' + Math.round(v/mx*100) + '%;background:' + (i===wdata.length-1?'var(--a)':'var(--as)') + '"></div>').join('') + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+      '<div class="card csm"><div class="st" style="font-size:13px;margin-bottom:10px">Top Shops</div>' +
+        (topShops.length ? topShops.map(([n,t],i) => '<div style="display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px"><span><span style="color:var(--a);margin-right:4px">' + (i+1) + '.</span>' + n + '</span><span style="color:var(--t2)">' + money(t) + '</span></div>').join('') : '<div style="font-size:11px;color:var(--t3)">No data yet</div>') +
+      '</div>' +
+      '<div class="card csm"><div class="st" style="font-size:13px;margin-bottom:10px">Top Items</div>' +
+        (topItems.length ? topItems.map(([n,t],i) => '<div style="display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px"><span><span style="color:var(--a);margin-right:4px">' + (i+1) + '.</span>' + n + '</span><span style="color:var(--t2)">' + money(t) + '</span></div>').join('') : '<div style="font-size:11px;color:var(--t3)">No data yet</div>') +
+      '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="sh"><div class="st">Recent Activity</div><button class="btn bg2" style="font-size:11px;padding:5px 9px" onclick="goPage(\'sales\')">All \u2192</button></div>' +
+      (recent.length ? recent.map(r =>
+        '<div class="li"><div class="lav">' + IC.sales + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="ltit" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.itemName + '</div>' +
+        '<div class="lsub">' + r.shopName + ' \u00b7 ' + r.date + (r.gstInclusive?' \u00b7 <span class="badge bgst" style="font-size:9px">GST Incl.</span>':'') + '</div></div>' +
+        '<div class="lrt"><div style="font-size:13px;font-weight:700">' + money(r.finalTotal) + '</div>' +
+        '<span class="badge ' + (r.paymentStatus==='Paid'?'bpaid':r.paymentStatus==='Partial'?'bpart':'bpend') + '">' + r.paymentStatus + '</span></div></div>'
+      ).join('') : '<div class="empty"><div class="eico">\uD83D\uDCE6</div><div class="esub">No sales yet. Tap + to add!</div></div>') +
+    '</div></div>';
+}
+
+// ── ADD SALE ──────────────────────────────────────────────────────────────────
+function openAddSale() { STATE.modal = {type:'addsale'}; render(); }
+
+function renderAddSaleModal() {
+  const today = new Date().toISOString().split('T')[0];
+  return '<div class="mhan"></div><div class="mtit">Add Sale Entry</div><div class="fg">' +
+    '<div class="fr"><div class="iw"><label class="il">Date *</label><input id="sd-date" class="inp" type="date" value="' + today + '"></div>' +
+    '<div class="iw"><label class="il">Invoice ID</label><input id="sd-inv" class="inp" placeholder="INV-001"></div></div>' +
+
+    '<div class="iw acw"><label class="il">Shop Name *</label>' +
+    '<input id="sd-shop" class="inp" placeholder="Search or add shop" oninput="acShow(\'sd-shop\',\'ac-shop\',STATE.shops.map(s=>s.name))" onfocus="acShow(\'sd-shop\',\'ac-shop\',STATE.shops.map(s=>s.name))" onblur="setTimeout(()=>acHide(\'ac-shop\'),200)">' +
+    '<div id="ac-shop" class="acd"></div></div>' +
+
+    '<div class="iw"><label class="il">Area</label><input id="sd-area" class="inp" placeholder="e.g. Bur Dubai"></div>' +
+
+    '<div class="iw acw"><label class="il">Item Name *</label>' +
+    '<input id="sd-item" class="inp" placeholder="Search or add item" oninput="acShow(\'sd-item\',\'ac-item\',STATE.items.map(i=>i.name));onItemPick()" onfocus="acShow(\'sd-item\',\'ac-item\',STATE.items.map(i=>i.name))" onblur="setTimeout(()=>acHide(\'ac-item\'),200)">' +
+    '<div id="ac-item" class="acd"></div></div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Category</label><input id="sd-cat" class="inp" placeholder="e.g. Dairy"></div>' +
+    '<div class="iw"><label class="il">Price Type</label><select id="sd-ptype" class="inp" onchange="onPtypeChange()">' +
+    '<option value="unit">Unit Price</option><option value="halfDozen">Half Dozen (6)</option><option value="casePrice">Case Price (12)</option>' +
+    '</select></div></div>' +
+
+    '<div id="tier-box" class="ptbox" style="display:none">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Catalog Pricing</div>' +
+    '<div class="ptrow"><span class="ptlbl">Unit</span><span class="ptval" id="t-unit">\u2014</span></div>' +
+    '<div class="ptrow"><span class="ptlbl" style="color:var(--half)">Half Dozen (6)</span><span class="ptval" style="color:var(--half)" id="t-half">\u2014</span></div>' +
+    '<div class="ptrow"><span class="ptlbl" style="color:var(--case)">Case (12)</span><span class="ptval" style="color:var(--case)" id="t-case">\u2014</span></div>' +
+    '</div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Unit Price *</label><input id="sd-uprice" class="inp" type="number" placeholder="0.00" step="0.01" oninput="recalc()"></div>' +
+    '<div class="iw"><label class="il">Quantity *</label><input id="sd-qty" class="inp" type="number" placeholder="1" step="0.5" oninput="recalc()"></div></div>' +
+
+    '<div style="background:var(--gsts);border:1px solid var(--gst);border-radius:var(--rs);padding:12px 13px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gst)">GST @ 8%</div>' +
+    '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--gst)">' +
+    '<input type="checkbox" id="sd-gstinc" onchange="recalc()" style="width:16px;height:16px;accent-color:var(--gst)"> GST Already Included</label></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">Line Total</div><div id="d-line" style="font-size:15px;font-weight:700;color:var(--t)">' + money(0) + '</div></div>' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">GST (8%)</div><div id="d-gst" style="font-size:15px;font-weight:700;color:var(--gst)">' + money(0) + '</div></div>' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">Final Total</div><div id="d-final" style="font-size:17px;font-weight:800;color:var(--a)">' + money(0) + '</div></div>' +
+    '</div><div id="gst-note" style="margin-top:8px;font-size:11px;color:var(--gst);display:none"></div></div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Payment Status</label><select id="sd-status" class="inp"><option>Pending</option><option>Paid</option><option>Partial</option></select></div>' +
+    '<div class="iw"><label class="il">Notes</label><input id="sd-notes" class="inp" placeholder="Any notes\u2026"></div></div>' +
+
+    '<div style="display:flex;gap:10px;margin-top:4px"><button class="btn bs" style="flex:1;height:48px" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn bp" style="flex:2;height:48px" onclick="saveSale()">Save Sale</button></div></div>';
+}
+
+// Autocomplete
+function acShow(inputId, dropId, list) {
+  const val = (document.getElementById(inputId)||{}).value||'';
+  const drop = document.getElementById(dropId);
+  if (!drop) return;
+  const filtered = list.filter(s => s && s.toLowerCase().includes(val.toLowerCase()) && s.toLowerCase() !== val.toLowerCase());
+  if (!filtered.length) { drop.style.display='none'; return; }
+  drop.style.display = 'block';
+  drop.innerHTML = filtered.slice(0,8).map(s => '<div class="aci" onmousedown="acPick(\'' + inputId + '\',\'' + dropId + '\',decodeURIComponent(\'' + encodeURIComponent(s) + '\'))">' + s + '</div>').join('');
+}
+function acHide(id) { const el=document.getElementById(id); if(el) el.style.display='none'; }
+function acPick(inputId, dropId, val) {
+  const el = document.getElementById(inputId);
+  if (el) el.value = val;
+  acHide(dropId);
+  if (inputId==='sd-item') onItemPick();
+  if (inputId==='sd-shop') {
+    const sh = STATE.shops.find(s=>s.name===val);
+    if (sh) { const a=document.getElementById('sd-area'); if(a&&!a.value) a.value=sh.area||''; }
+  }
+}
+function onItemPick() {
+  const name = (document.getElementById('sd-item')||{}).value||'';
+  const item = STATE.items.find(i=>i.name.toLowerCase()===name.toLowerCase());
+  const ptype = (document.getElementById('sd-ptype')||{}).value||'unit';
+  if (item) {
+    const cat = document.getElementById('sd-cat'); if(cat&&!cat.value) cat.value=item.category||'';
+    const tiers = calcTiers(item);
+    const up = document.getElementById('sd-uprice'); if(up) up.value=fmt2(getTierPrice(item, ptype));
+    const tb = document.getElementById('tier-box');
+    if (tb) {
+      tb.style.display='block';
+      const tu=document.getElementById('t-unit'), th=document.getElementById('t-half'), tc=document.getElementById('t-case');
+      if(tu) tu.textContent=money(tiers.unit)+' each';
+      if(th) th.textContent=money(tiers.halfDozen)+' for 6';
+      if(tc) tc.textContent=money(tiers.casePrice)+' for 12';
+    }
+  } else {
+    const tb=document.getElementById('tier-box'); if(tb) tb.style.display='none';
+  }
+  recalc();
+}
+function onPtypeChange() {
+  const name = (document.getElementById('sd-item')||{}).value||'';
+  const item = STATE.items.find(i=>i.name.toLowerCase()===name.toLowerCase());
+  if (item) {
+    const ptype = (document.getElementById('sd-ptype')||{}).value||'unit';
+    const up = document.getElementById('sd-uprice');
+    if (up) up.value = fmt2(getTierPrice(item, ptype));
+  }
+  recalc();
+}
+function recalc() {
+  const up = parseFloat((document.getElementById('sd-uprice')||{}).value)||0;
+  const qty = parseFloat((document.getElementById('sd-qty')||{}).value)||0;
+  const inc = (document.getElementById('sd-gstinc')||{}).checked||false;
+  const lt = +(up*qty).toFixed(2);
+  const g = calcGST(lt, inc);
+  const dl=document.getElementById('d-line'), dg=document.getElementById('d-gst'), df=document.getElementById('d-final'), dn=document.getElementById('gst-note');
+  if(dl) dl.textContent=money(lt);
+  if(dg) dg.textContent=money(g.gst);
+  if(df) df.textContent=money(g.total);
+  if(dn) { dn.style.display=lt>0?'block':'none'; dn.textContent=inc?'GST included: base '+money(g.base)+' + GST '+money(g.gst)+' = '+money(g.total):(lt>0?'+ 8% GST = '+money(g.total)+' total':''); }
+}
+function saveSale() {
+  const v = id => (document.getElementById(id)||{}).value||'';
+  const date=v('sd-date'), shopName=v('sd-shop'), area=v('sd-area'), invoiceId=v('sd-inv');
+  const itemName=v('sd-item'), category=v('sd-cat'), ptype=v('sd-ptype')||'unit';
+  const up=parseFloat(v('sd-uprice'))||0, qty=parseFloat(v('sd-qty'))||0;
+  const gstInclusive=(document.getElementById('sd-gstinc')||{}).checked||false;
+  const paymentStatus=v('sd-status')||'Pending', notes=v('sd-notes');
+  if(!shopName||!itemName||!qty||!up) { showToast('\u26A0\uFE0F Fill: Shop, Item, Qty, Price'); return; }
+  const lt=+(up*qty).toFixed(2);
+  const g=calcGST(lt, gstInclusive);
+  const sale={id:uid(),date,shopName,area,invoiceId,itemName,category,priceType:ptype,quantity:qty,unitPrice:up,lineTotal:lt,gstInclusive,gstRate:GST_RATE,gstAmt:g.gst,finalTotal:g.total,currency:STATE.currency||'MVR',paymentStatus,notes};
+  STATE.sales.push(sale);
+  if(!STATE.items.find(i=>i.name.toLowerCase()===itemName.toLowerCase())) {
+    const base = ptype === 'unit' ? up : ptype === 'halfDozen' ? +(up / 6).toFixed(2) : +(up / 12).toFixed(2);
+    const tiers = calcTiers(base);
+    STATE.items.push({id:uid(),name:itemName,category,unitPrice:tiers.unit,halfPrice:tiers.halfDozen,casePrice:tiers.casePrice});
+  }
+  if(!STATE.shops.find(s=>s.name.toLowerCase()===shopName.toLowerCase()))
+    STATE.shops.push({id:uid(),name:shopName,area,owner:'',contact:'',priority:'Medium',notes:'',lastVisit:date});
+  saveState(); showToast('\u2713 Sale saved!'); closeModal();
+}
+
+// ── SALES PAGE ────────────────────────────────────────────────────────────────
+function getVisibleSales() {
+  const srch = ((document.getElementById('s-srch') || {}).value || '').toLowerCase();
+  const stat = (document.getElementById('s-stat') || {}).value || '';
+  const sort = (document.getElementById('s-sort') || {}).value || 'date';
+  let rows = [...STATE.sales];
+  if (stat) rows = rows.filter(r => r.paymentStatus === stat);
+  if (srch) rows = rows.filter(r => (r.shopName || '').toLowerCase().includes(srch) || (r.itemName || '').toLowerCase().includes(srch) || (r.invoiceId || '').toLowerCase().includes(srch));
+  rows.sort((a,b) => sort === 'date' ? new Date(b.date) - new Date(a.date) : (b.finalTotal || 0) - (a.finalTotal || 0));
+  return rows;
+}
+function renderSalesPage() {
+  const total = STATE.sales.reduce((a,r) => a + (r.finalTotal || 0), 0);
+  const paid = STATE.sales.filter(r => r.paymentStatus === 'Paid').reduce((a,r) => a + (r.finalTotal || 0), 0);
+  const pend = STATE.sales.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + (r.finalTotal || 0), 0);
+  return '<div class="fu">' +
+    '<div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Sales History</h1><div style="font-size:12px;color:var(--t2)">' + STATE.sales.length + ' records</div></div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:14px">' +
+    [['Total', total, 'var(--a)'], ['Paid', paid, 'var(--ok)'], ['Pending', pend, 'var(--warn)']].map(([l,v,c]) =>
+      '<div style="flex:1;background:var(--s);border:1px solid var(--b);border-radius:var(--rs);padding:10px"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.06em">' + l + '</div><div style="font-size:13px;font-weight:700;color:' + c + ';margin-top:2px">' + money(v) + '</div></div>'
+    ).join('') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">' +
+      '<div class="srchw" style="flex:1;min-width:180px"><span class="srchi">' + IC.srch + '</span><input id="s-srch" class="inp srchin" placeholder="Search…" style="height:38px;font-size:13px" oninput="filterSales()"></div>' +
+      '<select id="s-stat" class="inp" style="height:38px;font-size:12px;padding:0 10px;width:auto" onchange="filterSales()"><option value="">All</option><option>Paid</option><option>Pending</option><option>Partial</option></select>' +
+      '<select id="s-sort" class="inp" style="height:38px;font-size:12px;padding:0 10px;width:auto" onchange="filterSales()"><option value="date">Date</option><option value="total">Amount</option></select>' +
+      '<button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="toggleSalesMassMode()">' + (salesMassMode ? 'Exit Mass Delete' : 'Mass Delete') + '</button>' +
+      (salesMassMode ? '<button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="selectAllVisibleSales()">Select All</button><button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="clearSaleSelection()">Clear</button><button class="btn bd" style="height:38px;padding:0 12px;font-size:12px" onclick="deleteSelectedSales()">Delete Selected (' + selectedSales.size + ')</button>' : '') +
+    '</div><div id="sales-tbl"></div></div>';
+}
+function bindSales() { filterSales(); }
+function filterSales() {
+  const rows = getVisibleSales();
+  const tbl = document.getElementById('sales-tbl');
+  if (!tbl) return;
+  if (!rows.length) { tbl.innerHTML = '<div class="empty"><div class="eico">🔍</div><div class="etit">No results</div></div>'; return; }
+  tbl.innerHTML = '<div class="tw"><table class="dt"><thead><tr>' +
+    (salesMassMode ? '<th style="width:34px"></th>' : '') +
+    '<th>Date</th><th>Shop</th><th>Item</th><th>Type</th><th class="nr">Total</th><th>GST</th><th>Status</th><th></th></tr></thead><tbody>' +
+    rows.map(r => '<tr' + (selectedSales.has(r.id) ? ' style="background:var(--as)"' : '') + '>' +
+      (salesMassMode ? '<td><input type="checkbox" ' + (selectedSales.has(r.id) ? 'checked' : '') + ' onchange="toggleSaleSelect(\'' + r.id + '\', this.checked)" style="width:18px;height:18px;accent-color:var(--a)"></td>' : '') +
+      '<td style="white-space:nowrap;color:var(--t2);font-size:11px">' + r.date + '</td>' +
+      '<td><div style="font-weight:600;font-size:12px">' + r.shopName + '</div><div style="font-size:10px;color:var(--t3)">' + (r.area||'') + '</div></td>' +
+      '<td><div style="font-size:12px">' + r.itemName + '</div><div style="font-size:10px;color:var(--t3)">' + (r.category||'') + '</div></td>' +
+      '<td><span class="badge ' + (r.priceType==='casePrice'?'bcase':r.priceType==='halfDozen'?'bhalf':'bpart') + '">' + tierLabel(r.priceType) + '</span></td>' +
+      '<td class="nr" style="font-weight:700;font-size:13px">' + money(r.finalTotal) + '</td>' +
+      '<td><span class="badge bgst" style="font-size:9px">' + (r.gstInclusive?'Incl.':'+ 8%') + '</span></td>' +
+      '<td><span class="badge ' + (r.paymentStatus==='Paid'?'bpaid':r.paymentStatus==='Partial'?'bpart':'bpend') + '">' + r.paymentStatus + '</span></td>' +
+      '<td><div style="display:flex;gap:4px">' +
+        (r.paymentStatus!=='Paid' ? '<button class="btn bic" style="width:28px;height:28px;background:var(--oks);color:var(--ok)" onclick="markPaid(\'' + r.id + '\')">' + IC.chk + '</button>' : '') +
+        '<button class="btn bic" style="width:28px;height:28px;background:var(--errs);color:var(--err)" onclick="delSale(\'' + r.id + '\')">' + IC.trash + '</button>' +
+      '</div></td></tr>'
+    ).join('') + '</tbody></table></div>';
+}
+function toggleSalesMassMode() {
+  salesMassMode = !salesMassMode;
+  selectedSales.clear();
+  render();
+}
+function toggleSaleSelect(id, checked) {
+  if (checked) selectedSales.add(id);
+  else selectedSales.delete(id);
+  filterSales();
+}
+function selectAllVisibleSales() {
+  getVisibleSales().forEach(r => selectedSales.add(r.id));
+  filterSales();
+}
+function clearSaleSelection() {
+  selectedSales.clear();
+  filterSales();
+}
+function deleteSelectedSales() {
+  if (!selectedSales.size) { showToast('Nothing selected'); return; }
+  if (!confirm('Delete ' + selectedSales.size + ' selected entries?')) return;
+  STATE.sales = STATE.sales.filter(s => !selectedSales.has(s.id));
+  selectedSales.clear();
+  saveState();
+  showToast('Deleted selected');
+  render();
+}
+function markPaid(id) { STATE.sales = STATE.sales.map(s => s.id===id ? {...s, paymentStatus:'Paid'} : s); saveState(); showToast('✓ Marked Paid'); render(); }
+function delSale(id) { if(confirm('Delete this sale?')) { STATE.sales = STATE.sales.filter(s=>s.id!==id); saveState(); showToast('Deleted'); render(); } }
+
+// ── INVOICES ──────────────────────────────────────────────────────────────────
+let invDetail = null;
+let salesMassMode = false;
+let selectedSales = new Set();
+function renderInvoices() {
+  const imap = {};
+  STATE.sales.forEach(s => {
+    const key = s.invoiceId || (s.shopName + '-' + s.date);
+    if (!imap[key]) imap[key] = {id:key,shopName:s.shopName,area:s.area||'',date:s.date,items:[],lineTotal:0,gstTotal:0,finalTotal:0,paid:0};
+    imap[key].items.push(s);
+    imap[key].lineTotal += s.lineTotal||0;
+    imap[key].gstTotal += s.gstAmt||0;
+    imap[key].finalTotal += s.finalTotal||0;
+    if(s.paymentStatus==='Paid') imap[key].paid += s.finalTotal||0;
+  });
+  const invs = Object.values(imap).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (invDetail) {
+    const inv = invs.find(i=>i.id===invDetail);
+    if (inv) return renderInvDetail(inv);
+    invDetail = null;
+  }
+  return '<div class="fu"><div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Invoices</h1><div style="font-size:12px;color:var(--t2)">' + invs.length + ' invoices</div></div>' +
+    (invs.length ? invs.map(inv => {
+      const stat = inv.paid>=inv.finalTotal&&inv.finalTotal>0?'Paid':inv.paid>0?'Partial':'Pending';
+      return '<div class="card csm chov" style="margin-bottom:10px;cursor:pointer" onclick="invDetail=\'' + inv.id + '\';render()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div><div style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em">' + inv.id + '</div>' +
+        '<div style="font-size:16px;font-weight:700;margin-top:2px">' + inv.shopName + '</div>' +
+        '<div style="font-size:11px;color:var(--t2)">' + inv.area + ' \u00b7 ' + inv.date + ' \u00b7 ' + inv.items.length + ' items</div></div>' +
+        '<div style="text-align:right"><div style="font-size:18px;font-weight:800;color:var(--a)">' + money(inv.finalTotal) + '</div>' +
+        '<span class="badge ' + (stat==='Paid'?'bpaid':stat==='Partial'?'bpart':'bpend') + '">' + stat + '</span></div></div>' +
+        (stat!=='Paid'&&inv.finalTotal>0?'<div class="pb" style="margin-top:10px"><div class="pf" style="width:' + Math.round(inv.paid/inv.finalTotal*100) + '%;background:' + (stat==='Partial'?'var(--warn)':'var(--a)') + '"></div></div>':'') +
+        '</div>';
+    }).join('') : '<div class="empty"><div class="eico">\uD83E\uDDFE</div><div class="etit">No invoices yet</div><div class="esub">Add sales with Invoice IDs</div></div>') + '</div>';
+}
+function renderInvDetail(inv) {
+  const stat = inv.paid>=inv.finalTotal&&inv.finalTotal>0?'Paid':inv.paid>0?'Partial':'Pending';
+  const base = inv.items.reduce((a,i)=>a+(i.gstInclusive?i.finalTotal/1.08:(i.lineTotal||0)),0);
+  return '<div class="fu"><button class="btn bg2" style="margin-bottom:14px;padding:6px 0" onclick="invDetail=null;render()">' + IC.back + ' Back</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">' +
+    '<div><div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.07em">INVOICE</div>' +
+    '<h2 style="font-size:20px;font-weight:800">' + inv.id + '</h2>' +
+    '<div style="font-size:13px;color:var(--t2)">' + inv.shopName + ' \u00b7 ' + inv.area + '</div>' +
+    '<div style="font-size:11px;color:var(--t3)">' + inv.date + '</div></div>' +
+    '<span class="badge ' + (stat==='Paid'?'bpaid':stat==='Partial'?'bpart':'bpend') + '" style="font-size:12px;padding:5px 13px">' + stat + '</span></div>' +
+    '<div class="tw" style="margin-bottom:14px"><table class="dt"><thead><tr><th>Item</th><th>Type</th><th class="nr">Qty</th><th class="nr">Unit</th><th class="nr">Line</th><th>GST</th><th class="nr">Final</th></tr></thead><tbody>' +
+    inv.items.map(it => '<tr>' +
+      '<td><div style="font-weight:600;font-size:12px">' + it.itemName + '</div><div style="font-size:10px;color:var(--t3)">' + (it.category||'') + '</div></td>' +
+      '<td><span class="badge ' + (it.priceType==='casePrice'?'bcase':it.priceType==='halfDozen'?'bhalf':'bpart') + '" style="font-size:9px">' + tierLabel(it.priceType) + '</span></td>' +
+      '<td class="nr">' + it.quantity + '</td><td class="nr" style="font-size:11px">' + money(it.unitPrice) + '</td>' +
+      '<td class="nr">' + money(it.lineTotal||0) + '</td>' +
+      '<td><span class="badge bgst" style="font-size:9px">' + (it.gstInclusive?'Incl.':'+ 8%') + '</span><div style="font-size:10px;color:var(--gst)">' + money(it.gstAmt) + '</div></td>' +
+      '<td class="nr" style="font-weight:700;color:var(--a)">' + money(it.finalTotal) + '</td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    '<div style="background:var(--s2);border-radius:var(--rs);padding:14px;display:flex;flex-direction:column;gap:7px">' +
+    '<div class="gstrow"><span style="color:var(--t2)">Subtotal (ex-GST)</span><span style="font-weight:600">' + money(base) + '</span></div>' +
+    '<div class="gstrow"><span style="color:var(--gst)">GST @ 8%</span><span style="color:var(--gst);font-weight:600">' + money(inv.gstTotal) + '</span></div>' +
+    '<div style="height:1px;background:var(--b)"></div>' +
+    '<div class="gstrow" style="font-size:16px;font-weight:800"><span>Total (inc. GST)</span><span style="color:var(--a)">' + money(inv.finalTotal) + '</span></div>' +
+    (inv.paid>0?'<div class="gstrow" style="color:var(--ok);font-weight:600"><span>Amount Paid</span><span>' + money(inv.paid) + '</span></div>' +
+    '<div class="gstrow" style="color:var(--warn);font-weight:700"><span>Balance Due</span><span>' + money(inv.finalTotal-inv.paid) + '</span></div>':'') +
+    '</div></div>';
+}
+
+// ── WEEKLY REPORT ─────────────────────────────────────────────────────────────
+let selWeek = null;
+function renderReport() {
+  const wmap = {};
+  STATE.sales.forEach(s => { const w=weekStart(s.date); if(!wmap[w]) wmap[w]=[]; wmap[w].push(s); });
+  const weeks = Object.keys(wmap).sort().reverse();
+  if (weeks.length && !selWeek) selWeek = weeks[0];
+  const wd = (selWeek && wmap[selWeek]) ? wmap[selWeek] : [];
+  const wTot=wd.reduce((a,r)=>a+r.finalTotal,0);
+  const wPaid=wd.filter(r=>r.paymentStatus==='Paid').reduce((a,r)=>a+r.finalTotal,0);
+  const wPend=wd.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+r.finalTotal,0);
+  const wGST=wd.reduce((a,r)=>a+(r.gstAmt||0),0);
+  return '<div class="fu"><div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Weekly Report</h1><div style="font-size:12px;color:var(--t2)">Business week: Saturday \u2013 Thursday</div></div>' +
+    '<div style="overflow-x:auto;display:flex;gap:7px;margin-bottom:14px;padding-bottom:4px">' +
+    (weeks.length ? weeks.map(w => '<button class="chip' + (selWeek===w?' on':'') + '" style="flex-shrink:0" onclick="selWeek=\'' + w + '\';render()">' + weekLabel(w) + '</button>').join('') : '<div style="font-size:12px;color:var(--t3)">No data yet</div>') + '</div>' +
+    (wd.length ? '' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">' +
+    [['Total',wTot,'var(--a)'],['Paid',wPaid,'var(--ok)'],['Pending',wPend,'var(--warn)'],['GST',wGST,'var(--gst)']].map(([l,v,c]) =>
+      '<div style="background:var(--s);border:1px solid var(--b);border-radius:var(--rs);padding:10px"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase">' + l + '</div><div style="font-size:12px;font-weight:800;color:' + c + ';margin-top:2px">' + money(v) + '</div></div>'
+    ).join('') + '</div>' +
+    '<div class="tw"><table class="dt"><thead><tr><th>Date</th><th>Shop</th><th>Item</th><th>Type</th><th class="nr">GST</th><th class="nr">Total</th><th>Status</th></tr></thead><tbody>' +
+    wd.map(s => '<tr>' +
+      '<td style="font-size:10px;color:var(--t2);white-space:nowrap">' + s.date + '</td>' +
+      '<td style="font-weight:600;font-size:12px">' + s.shopName + '</td>' +
+      '<td style="font-size:11px;color:var(--t2)">' + s.itemName + '</td>' +
+      '<td><span class="badge ' + (s.priceType==='casePrice'?'bcase':s.priceType==='halfDozen'?'bhalf':'bpart') + '" style="font-size:9px">' + tierLabel(s.priceType) + '</span></td>' +
+      '<td class="nr"><div style="font-size:10px;color:var(--gst)">' + money(s.gstAmt) + '</div><div style="font-size:9px;color:var(--t3)">' + (s.gstInclusive?'Incl.':'+ 8%') + '</div></td>' +
+      '<td class="nr" style="font-weight:700;font-size:13px">' + money(s.finalTotal) + '</td>' +
+      '<td><span class="badge ' + (s.paymentStatus==='Paid'?'bpaid':s.paymentStatus==='Partial'?'bpart':'bpend') + '">' + s.paymentStatus + '</span></td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    '<div style="background:var(--s);border:1px solid var(--b);border-radius:0 0 var(--rm) var(--rm);border-top:none;padding:12px 14px;display:flex;flex-direction:column;gap:6px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2)"><span>Subtotal (ex-GST)</span><span>' + money(wd.reduce((a,r)=>a+(r.gstInclusive?r.finalTotal/1.08:(r.lineTotal||0)),0)) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gst)"><span>GST @ 8%</span><span>' + money(wGST) + '</span></div>' +
+    '<div style="height:1px;background:var(--b)"></div>' +
+    '<div style="display:flex;justify-content:space-between;font-family:Outfit,sans-serif;font-weight:800;font-size:16px"><span>Week Total</span><span style="color:var(--a)">' + money(wTot) + '</span></div></div>'
+    : '<div class="empty"><div class="eico">\uD83D\uDCCA</div><div class="etit">No data this week</div></div>') + '</div>';
+}
+
+// ── SHOPS ─────────────────────────────────────────────────────────────────────
+
+function renderShops() {
+  return '<div class="fu"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px">' +
+    '<div><h1 style="font-size:22px;font-weight:800">Shops</h1><div style="font-size:12px;color:var(--t2)">' + STATE.shops.length + ' shops</div></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
+      '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="toggleShopsMassMode()">' + (shopsMassMode ? 'Exit Mass Delete' : 'Mass Delete') + '</button>' +
+      (shopsMassMode ? '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="selectAllVisibleShops()">Select All</button><button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="clearShopSelection()">Clear</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteSelectedShops()">Delete Selected (' + selectedShops.size + ')</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteAllShops()">Delete All</button>' : '') +
+      '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="openShopModal(null)">' + IC.plus + ' Add</button></div></div>' +
+    '<div class="srchw" style="margin-bottom:12px"><span class="srchi">' + IC.srch + '</span><input id="sh-srch" class="inp srchin" placeholder="Search shops…" style="height:38px;font-size:13px" oninput="filterShops()"></div>' +
+    '<div id="shops-list"></div></div>';
+}
+function bindShops() { filterShops(); }
+function getVisibleShops() {
+  const srch = ((document.getElementById('sh-srch')||{}).value||'').toLowerCase();
+  return STATE.shops.filter(s=>!srch||s.name.toLowerCase().includes(srch)||(s.area||'').toLowerCase().includes(srch)||(s.owner||'').toLowerCase().includes(srch));
+}
+function toggleShopsMassMode() { shopsMassMode = !shopsMassMode; selectedShops.clear(); filterShops(); }
+function toggleShopSelect(id, checked) { if (checked) selectedShops.add(id); else selectedShops.delete(id); filterShops(); }
+function selectAllVisibleShops() { getVisibleShops().forEach(s=>selectedShops.add(s.id)); filterShops(); }
+function clearShopSelection() { selectedShops.clear(); filterShops(); }
+function deleteSelectedShops() {
+  if (!selectedShops.size) { showToast('Nothing selected'); return; }
+  if (!confirm('Delete ' + selectedShops.size + ' selected shops?')) return;
+  STATE.shops = STATE.shops.filter(s => !selectedShops.has(s.id));
+  selectedShops.clear();
+  saveState();
+  showToast('Deleted selected shops');
+  render();
+}
+function deleteAllShops() {
+  if (!confirm('Delete ALL shops?')) return;
+  STATE.shops = [];
+  selectedShops.clear();
+  saveState();
+  showToast('Deleted all shops');
+  render();
+}
+function filterShops() {
+  const shops = getVisibleShops();
+  const el = document.getElementById('shops-list'); if(!el) return;
+  if(!shops.length){el.innerHTML='<div class="empty"><div class="eico">🎪</div><div class="etit">No shops found</div></div>';return;}
+  el.innerHTML = shops.map(shop => {
+    const ss = STATE.sales.filter(r=>r.shopName===shop.name);
+    const stot = ss.reduce((a,r)=>a+r.finalTotal,0);
+    const spend = ss.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+r.finalTotal,0);
+    return '<div class="card csm chov" style="margin-bottom:10px;position:relative' + (selectedShops.has(shop.id) ? ';background:var(--as)' : '') + '">' +
+      (shopsMassMode ? '<div style="position:absolute;top:12px;right:12px"><input type="checkbox" ' + (selectedShops.has(shop.id)?'checked':'') + ' onchange="toggleShopSelect(\'' + shop.id + '\',this.checked)"></div>' : '') +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+      '<div style="flex:1"><div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">' +
+      '<div style="font-size:15px;font-weight:700">' + shop.name + '</div>' +
+      '<span class="badge ' + (shop.priority==='High'?'bpaid':shop.priority==='Medium'?'bpart':'') + '" style="font-size:9px">' + (shop.priority||'—') + '</span>' + (shop.type ? '<span class="tag" style="font-size:9px;margin-left:4px">' + shop.type + '</span>' : '') + '</div>' +
+      '<div style="font-size:11px;color:var(--t2)">' + (shop.owner?shop.owner+' · ':'') + (shop.area||'') + '</div>' +
+      (shop.contact?'<div style="font-size:11px;color:var(--t3)">📞 ' + shop.contact + '</div>':'') + '</div>' +
+      '<div style="text-align:right;margin-left:12px"><div style="font-size:15px;font-weight:800;color:var(--a)">' + money(stot) + '</div>' +
+      (spend>0?'<div style="font-size:10px;color:var(--warn)">' + money(spend) + ' due</div>':'') +
+      '<div style="font-size:10px;color:var(--t3)">' + ss.length + ' orders</div></div></div>' +
+      '<div style="display:flex;gap:7px;margin-top:10px">' +
+      '<button class="btn bs" style="flex:1;padding:7px 10px;font-size:12px" onclick="openShopModal(\'' + shop.id + '\')">' + IC.edit + ' Edit</button>' +
+      '<button class="btn bd" style="flex:1;padding:7px 10px;font-size:12px" onclick="delShop(\'' + shop.id + '\')">' + IC.trash + ' Remove</button>' +
+      '</div></div>';
+  }).join('');
+}
+function openShopModal(id) { STATE.modal={type:'shop',data:{id}}; render(); }
+function delShop(id) { if(confirm('Remove this shop?')){STATE.shops=STATE.shops.filter(s=>s.id!==id);saveState();showToast('Removed');render();} }
+function renderShopModal(id) {
+  const shop = id ? STATE.shops.find(s=>s.id===id) : null;
+  const STYPES = ['Grocer','Tuck Shop','Supermarket','Cosmetic Shop','Pharmacy','Cafe / Restaurant','Bakery','Hotel / Resort','Library','Stationery','Electronics','Wholesale','Online','Other'];
+  const v = k => shop ? (shop[k]||'') : '';
+  const typeOpts = '<option value="">-- Select Type --</option>' + STYPES.map(t => '<option value="' + t + '"' + (v('type') === t ? ' selected' : '') + '>' + t + '</option>').join('');
+  return '<div class="mhan"></div><div class="mtit">' + (shop ? 'Edit Shop' : 'Add Shop') + '</div><div class="fg">' +
+    '<div class="iw"><label class="il">Shop Name *</label><input id="sm-name" class="inp" value="' + v('name') + '" placeholder="e.g. On The Way 1"></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Owner</label><input id="sm-owner" class="inp" value="' + v('owner') + '" placeholder="Owner name"></div>' +
+    '<div class="iw"><label class="il">Contact</label><input id="sm-contact" class="inp" value="' + v('contact') + '" placeholder="Phone"></div></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Area</label><input id="sm-area" class="inp" value="' + v('area') + '" placeholder="e.g. Male"></div>' +
+    '<div class="iw"><label class="il">Shop Type</label><select id="sm-type" class="inp">' + typeOpts + '</select></div></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Priority</label><select id="sm-priority" class="inp">' +
+    ['High','Medium','Low'].map(p => '<option' + (v('priority') === p ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></div>' +
+    '<div class="iw"><label class="il">TIN / Notes</label><input id="sm-notes" class="inp" value="' + v('notes') + '" placeholder="TIN or notes"></div></div>' +
+    '<div style="display:flex;gap:10px"><button class="btn bs" style="flex:1;height:46px" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn bp" style="flex:2;height:46px" onclick="saveShop(\'' + (id || '') + '\')">\' + (shop ? \'Save Changes\' : \'Add Shop\') + \'</button></div></div>\';<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="H2 Line">
+<meta name="theme-color" content="#0A0A0F">
+<title>H2 Line</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='38' fill='%236366F1'/><text y='125' x='90' text-anchor='middle' font-size='96' font-family='system-ui' font-weight='800' fill='white'>H</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --a:#6366F1;--as:rgba(99,102,241,.13);--ag:rgba(99,102,241,.28);
+  --ok:#10B981;--oks:rgba(16,185,129,.13);
+  --warn:#F59E0B;--warns:rgba(245,158,11,.13);
+  --err:#EF4444;--errs:rgba(239,68,68,.13);
+  --gst:#8B5CF6;--gsts:rgba(139,92,246,.14);
+  --case:#0EA5E9;--cases:rgba(14,165,233,.13);
+  --half:#F472B6;--halfs:rgba(244,114,182,.13);
+  --rl:20px;--rm:14px;--rs:10px;--rx:7px;
+  --tr:220ms cubic-bezier(.4,0,.2,1);
+  --safe:env(safe-area-inset-bottom,16px)
+}
+.dark{--bg:#0A0A0F;--s:#141420;--s2:#1C1C2C;--s3:#252535;--b:rgba(255,255,255,.07);--t:#F0F0FF;--t2:#8888AA;--t3:#555570;--nav:rgba(12,12,20,.96)}
+.light{--bg:#F4F4F8;--s:#FFFFFF;--s2:#F0F0F6;--s3:#E6E6F0;--b:rgba(0,0,0,.07);--t:#0A0A12;--t2:#6B6B80;--t3:#9999AA;--nav:rgba(255,255,255,.96)}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--t);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif}
+input,select,textarea,button{font-family:'Nunito',sans-serif}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:99px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fu{animation:fadeUp .28s ease both}
+.su{animation:slideUp .3s ease both}
+.stag>*{animation:fadeUp .28s ease both}
+.stag>*:nth-child(1){animation-delay:0ms}
+.stag>*:nth-child(2){animation-delay:50ms}
+.stag>*:nth-child(3){animation-delay:100ms}
+.stag>*:nth-child(4){animation-delay:150ms}
+.stag>*:nth-child(5){animation-delay:200ms}
+#app{min-height:100vh;display:flex;flex-direction:column}
+#topbar{position:sticky;top:0;z-index:200;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b);padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 120px;max-width:780px;margin:0 auto;width:100%}
+#bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--b);display:flex;padding:6px 2px;padding-bottom:calc(6px + var(--safe))}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 1px;background:none;border:none;cursor:pointer;color:var(--t3);font-size:9px;font-weight:600;transition:color var(--tr);-webkit-tap-highlight-color:transparent}
+.nb.on{color:var(--a)}
+.ndot{width:3px;height:3px;border-radius:50%;background:var(--a);opacity:0;transition:opacity var(--tr)}
+.nb.on .ndot{opacity:1}
+#fab{position:fixed;bottom:calc(72px + var(--safe));right:18px;width:56px;height:56px;border-radius:50%;background:var(--a);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px var(--ag);z-index:150;transition:all var(--tr);-webkit-tap-highlight-color:transparent}
+#fab:active{transform:scale(.93)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;cursor:pointer;font-weight:500;transition:all var(--tr);-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.bp{background:var(--a);color:#fff;border-radius:var(--rs);padding:12px 20px;font-size:15px;box-shadow:0 2px 12px var(--ag)}
+.bg2{background:transparent;color:var(--t2);border-radius:var(--rs);padding:9px 14px;font-size:13px}
+.bg2:hover{background:var(--s2);color:var(--t)}
+.bs{background:var(--s2);color:var(--t);border-radius:var(--rs);padding:10px 16px;font-size:13px}
+.bs:hover{background:var(--s3)}
+.bd{background:var(--errs);color:var(--err);border-radius:var(--rs);padding:10px 16px;font-size:13px}
+.bsuc{background:var(--ok);color:#fff;border-radius:var(--rs);padding:12px 20px;font-size:15px}
+.bw{width:100%}
+.bic{width:36px;height:36px;padding:0;border-radius:var(--rs);background:var(--s2);color:var(--t2)}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:18px}
+.csm{padding:14px;border-radius:var(--rm)}
+.chov{transition:border-color var(--tr),box-shadow var(--tr)}
+.chov:hover{border-color:var(--a);box-shadow:0 4px 20px var(--as)}
+.iw{display:flex;flex-direction:column;gap:5px}
+.il{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.06em;text-transform:uppercase}
+.inp{background:var(--s2);border:1.5px solid var(--b);border-radius:var(--rs);padding:11px 13px;font-size:15px;color:var(--t);width:100%;transition:all var(--tr);outline:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--a);background:var(--s);box-shadow:0 0 0 3px var(--as)}
+.inp::placeholder{color:var(--t3)}
+select.inp{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888AA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea.inp{resize:vertical;min-height:70px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.bpaid{background:var(--oks);color:var(--ok)}
+.bpend{background:var(--warns);color:var(--warn)}
+.bpart{background:var(--as);color:var(--a)}
+.bgst{background:var(--gsts);color:var(--gst)}
+.bcase{background:var(--cases);color:var(--case)}
+.bhalf{background:var(--halfs);color:var(--half)}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:500;background:var(--s2);color:var(--t2)}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kcard{background:var(--s);border:1px solid var(--b);border-radius:var(--rm);padding:14px}
+.klbl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.kval{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.ksub{font-size:11px;color:var(--t2);margin-top:3px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--rm);border:1px solid var(--b)}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{background:var(--s2);color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;text-align:left;white-space:nowrap}
+.dt td{padding:11px 12px;border-top:1px solid var(--b);color:var(--t);vertical-align:middle}
+.dt tr:hover td{background:var(--s2)}
+.nr{text-align:right;font-variant-numeric:tabular-nums}
+.cbw{display:flex;align-items:flex-end;gap:5px;height:72px}
+.cb{flex:1;border-radius:3px 3px 0 0;transition:background var(--tr);min-width:6px}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.msh{background:var(--s);border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 18px calc(28px + var(--safe));animation:slideUp .3s ease}
+.mhan{width:34px;height:4px;background:var(--s3);border-radius:99px;margin:8px auto 14px}
+.mtit{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+.acw{position:relative}
+.acd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s);border:1.5px solid var(--b);border-radius:var(--rs);z-index:400;max-height:180px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);display:none}
+.aci{padding:10px 13px;cursor:pointer;font-size:14px;transition:background var(--tr)}
+.aci:hover{background:var(--s2);color:var(--a)}
+.srchw{position:relative}
+.srchi{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.srchin{padding-left:34px !important}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 20px;gap:10px;text-align:center}
+.eico{font-size:38px;opacity:.35}
+.etit{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700}
+.esub{font-size:13px;color:var(--t2);max-width:220px}
+.authbg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.st{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}
+.li{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--b)}
+.li:last-child{border-bottom:none}
+.lav{width:38px;height:38px;border-radius:var(--rs);background:var(--as);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ltit{font-size:14px;font-weight:500}
+.lsub{font-size:11px;color:var(--t2)}
+.lrt{margin-left:auto;text-align:right}
+.fg{display:grid;gap:14px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pb{height:3px;background:var(--s2);border-radius:99px;overflow:hidden}
+.pf{height:100%;border-radius:99px;transition:width .5s ease}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:600;background:var(--s2);color:var(--t2);cursor:pointer;border:1.5px solid transparent;transition:all var(--tr);-webkit-tap-highlight-color:transparent}
+.chip.on{background:var(--as);color:var(--a);border-color:var(--a)}
+.aline{width:28px;height:3px;background:var(--a);border-radius:99px;margin-bottom:14px}
+.gstrow{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.ptbox{background:var(--s2);border-radius:var(--rm);padding:12px;margin-top:4px}
+.ptrow{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b)}
+.ptrow:last-child{border-bottom:none}
+.ptlbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.ptval{font-size:14px;font-weight:700}
+.spin{animation:spin 1s linear infinite;display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%}
+#toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%) translateY(-10px);background:var(--t);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.viewer-badge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:14px;z-index:999;background:var(--warn);color:#000;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.05em;pointer-events:none}
+.share-tog input{width:44px;height:26px;appearance:none;-webkit-appearance:none;background:var(--s3);border-radius:99px;position:relative;cursor:pointer;transition:background var(--tr)}
+.share-tog input:checked{background:var(--a)}
+.share-tog input::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform var(--tr);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.share-tog input:checked::after{transform:translateX(18px)}
+.slink{background:var(--s2);border:1.5px solid var(--b);border-radius:var(--rs);padding:10px 13px;font-size:12px;font-family:monospace;word-break:break-all;color:var(--t2);margin-top:8px;cursor:pointer}
+.slink:hover{border-color:var(--a)}
+@media(min-width:600px){.kgrid{grid-template-columns:repeat(4,1fr)}.mov{align-items:center}.msh{border-radius:22px;max-height:88vh}}
+</style>
+</head>
+<body class="dark">
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const db = {
+  get: (k, d=null) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} }
+};
+const money = (n, currency) => {
+  const code = String(currency || STATE?.currency || db.get('currency','MVR') || 'MVR').toUpperCase();
+  const v = Number(n || 0);
+  if (code === 'MVR') return 'Rf ' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  try { return new Intl.NumberFormat('en', { style: 'currency', currency: code, currencyDisplay: 'symbol', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v); }
+  catch { return code + ' ' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+};
+const fmt2 = n => Number(n||0).toFixed(2);
+const GST_RATE = 8;
+
+// Week helpers (Sat=start Thu=end)
+function weekStart(ds) {
+  const d = new Date(ds), day = d.getDay();
+  const diff = day===6 ? 0 : -(day+1);
+  const s = new Date(d); s.setDate(d.getDate()+diff);
+  return s.toISOString().split('T')[0];
+}
+function weekLabel(ds) {
+  const d = new Date(ds), day = d.getDay();
+  const diff = day===6 ? 0 : -(day+1);
+  const s = new Date(d); s.setDate(d.getDate()+diff);
+  const e = new Date(s); e.setDate(s.getDate()+5);
+  const f = x => x.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+  return f(s) + ' \u2013 ' + f(e);
+}
+
+// GST helpers
+function calcGST(lineTotal, inclusive) {
+  const t = parseFloat(lineTotal)||0;
+  if (inclusive) {
+    const base = t/1.08;
+    return { base:+base.toFixed(2), gst:+(t-base).toFixed(2), total:t };
+  }
+  const gst = t*0.08;
+  return { base:t, gst:+gst.toFixed(2), total:+(t+gst).toFixed(2) };
+}
+
+// Price tier helpers
+function calcTiers(input) {
+  // FIXED: Unit price alone → NO auto-calc for half/case
+  // Case price given → half = case/2 if not explicitly set
+  if (input && typeof input === 'object') {
+    const u = parseFloat(input.unitPrice) || 0;
+    const cRaw = (input.casePrice !== undefined && input.casePrice !== null && String(input.casePrice).trim() !== '') ? parseFloat(input.casePrice) : null;
+    const hRaw = (input.halfPrice !== undefined && input.halfPrice !== null && String(input.halfPrice).trim() !== '') ? parseFloat(input.halfPrice) : null;
+    const c = cRaw || 0;
+    const h2 = hRaw !== null ? hRaw : (cRaw !== null && cRaw > 0 ? +(cRaw / 2).toFixed(2) : 0);
+    return { unit: u, halfDozen: h2, casePrice: c };
+  }
+  const u = parseFloat(input) || 0;
+  return { unit: u, halfDozen: 0, casePrice: 0 }; // NO auto-calc from unit alone
+}
+function getTierPrice(item, ptype) {
+  const tiers = calcTiers(item);
+  return ptype === 'halfDozen' ? tiers.halfDozen : ptype === 'casePrice' ? tiers.casePrice : tiers.unit;
+}
+function tierLabel(t) {
+  if (t==='casePrice') return 'Case (12)';
+  if (t==='halfDozen') return 'Half Dozen (6)';
+  return 'Unit';
+}
+
+// Toast
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── SEED DATA ──────────────────────────────────────────────────────────────
+function seedData() {
+  if (db.get('seeded3')) return;
+  const today = new Date().toISOString().split('T')[0];
+  db.set('items', [
+    {id:uid(),name:'Fresh Milk 1L',category:'Dairy',unitPrice:65},
+    {id:uid(),name:'Butter 500g',category:'Dairy',unitPrice:280},
+    {id:uid(),name:'Orange Juice 1L',category:'Beverages',unitPrice:110},
+    {id:uid(),name:'Mineral Water 1L',category:'Beverages',unitPrice:20},
+    {id:uid(),name:'White Bread',category:'Bakery',unitPrice:45},
+  ]);
+  db.set('shops', [
+    {id:uid(),name:'Al Noor Mart',owner:'Ahmed Ali',contact:'9876543210',area:'Bur Dubai',priority:'High',notes:''},
+    {id:uid(),name:'Sunrise Superstore',owner:'Ravi Kumar',contact:'9123456789',area:'Deira',priority:'Medium',notes:''},
+    {id:uid(),name:'City Fresh Market',owner:'Sara Hassan',contact:'9988776655',area:'Karama',priority:'High',notes:''},
+  ]);
+  db.set('sales', [
+    {id:uid(),shopName:'Al Noor Mart',area:'Bur Dubai',invoiceId:'INV-001',date:today,itemName:'Fresh Milk 1L',category:'Dairy',priceType:'casePrice',quantity:2,unitPrice:65,lineTotal:1464.40,gstInclusive:false,gstRate:8,gstAmt:109.40,finalTotal:1573.80,paymentStatus:'Paid',notes:''},
+    {id:uid(),shopName:'Al Noor Mart',area:'Bur Dubai',invoiceId:'INV-001',date:today,itemName:'Butter 500g',category:'Dairy',priceType:'unit',quantity:5,unitPrice:280,lineTotal:1400,gstInclusive:false,gstRate:8,gstAmt:112,finalTotal:1512,paymentStatus:'Paid',notes:''},
+    {id:uid(),shopName:'Sunrise Superstore',area:'Deira',invoiceId:'INV-002',date:today,itemName:'Orange Juice 1L',category:'Beverages',priceType:'halfDozen',quantity:3,unitPrice:110,lineTotal:1920.60,gstInclusive:true,gstRate:8,gstAmt:142.27,finalTotal:1920.60,paymentStatus:'Pending',notes:'GST included'},
+    {id:uid(),shopName:'City Fresh Market',area:'Karama',invoiceId:'INV-003',date:today,itemName:'Mineral Water 1L',category:'Beverages',priceType:'unit',quantity:50,unitPrice:20,lineTotal:1000,gstInclusive:false,gstRate:8,gstAmt:80,finalTotal:1080,paymentStatus:'Pending',notes:''},
+  ]);
+  db.set('seeded3', true);
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let STATE = {
+  dark: db.get('dark', true),
+  user: db.get('user'),
+  page: 'dashboard',
+  sales: db.get('sales', []),
+  items: db.get('items', []),
+  shops: db.get('shops', []),
+  currency: db.get('currency', 'MVR'),
+  modal: null,
+  isViewer: false,
+};
+
+let SHARE = db.get('shareState', {
+  enabled: false,
+  shareId: null,
+  lastPushed: null,
+  perms: {dashboard:true, sales:true, invoices:true, report:true, shops:false, items:false}
+});
+
+let itemsMassMode = false;
+let selectedItems = new Set();
+let shopsMassMode = false;
+let selectedShops = new Set();
+
+function setCurrency(code) {
+  const c = String(code || 'MVR').trim().toUpperCase();
+  STATE.currency = c || 'MVR';
+  db.set('currency', STATE.currency);
+  saveState();
+  render();
+}
+
+const FIREBASE_URL = 'https://h2line-share-default-rtdb.firebaseio.com';
+const VIEW_ID = new URLSearchParams(window.location.search).get('view');
+
+function saveState() {
+  db.set('sales', STATE.sales);
+  db.set('items', STATE.items);
+  db.set('shops', STATE.shops);
+  db.set('currency', STATE.currency || 'MVR');
+  db.set('dark', STATE.dark);
+  autoSync();
+}
+
+// ── ICONS ──────────────────────────────────────────────────────────────────
+const IC = {
+  home: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  sales: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  shop: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M8 9V7a4 4 0 018 0v2"/></svg>',
+  items: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>',
+  report: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  inv: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+  plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  srch: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>',
+  chk: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  sun: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>',
+  cog: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+  dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  ul: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  share: '\uD83D\uDD17',
+};
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('app');
+  if (!root) return;
+  document.body.className = STATE.dark ? 'dark' : 'light';
+  if (!STATE.user) { root.innerHTML = renderAuth(); bindAuth(); return; }
+  const viewerFab = STATE.isViewer ? '' : renderFab();
+  root.innerHTML = renderTopBar() + '<div id="content" class="fu">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
+  bindPage();
+  if (STATE.modal) bindModal();
+}
+
+// ── AUTH ────────────────────────────────────────────────────────────────────
+let authMode = 'login';
+function renderAuth() {
+  return '<div class="authbg"><div style="width:100%;max-width:400px" class="fu">' +
+    '<div style="font-family:Outfit,sans-serif;font-size:30px;font-weight:800;color:var(--a);margin-bottom:6px">H2 Line</div>' +
+    '<div style="font-size:14px;color:var(--t2);margin-bottom:28px">Distribution sales, simplified.</div>' +
+    '<div class="card"><div style="display:flex;gap:6px;margin-bottom:20px">' +
+    '<button id="tab-login" onclick="switchTab(\'login\')" style="flex:1;padding:10px;border-radius:var(--rs);border:none;cursor:pointer;font-weight:700;font-size:14px;background:var(--a);color:#fff">Log In</button>' +
+    '<button id="tab-signup" onclick="switchTab(\'signup\')" style="flex:1;padding:10px;border-radius:var(--rs);border:none;cursor:pointer;font-weight:700;font-size:14px;background:var(--s2);color:var(--t2)">Sign Up</button>' +
+    '</div><div class="fg">' +
+    '<div class="iw" id="name-row" style="display:none"><label class="il">Full Name</label><input id="a-name" class="inp" placeholder="Your name"></div>' +
+    '<div class="iw"><label class="il">Email</label><input id="a-email" class="inp" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
+    '<div class="iw" style="position:relative"><label class="il">Password</label><input id="a-pw" class="inp" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" style="padding-right:44px" autocomplete="current-password">' +
+    '<button onclick="togglePw()" style="position:absolute;right:8px;top:26px;background:none;border:none;cursor:pointer;color:var(--t2);padding:6px">\uD83D\uDC41</button></div>' +
+    '<div id="a-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px"></div>' +
+    '<button id="a-submit" onclick="doAuth()" class="btn bp bw" style="height:48px">Log In</button>' +
+    '<button onclick="switchTab(\'forgot\')" class="btn bg2 bw" style="font-size:13px">Forgot password?</button>' +
+    '</div></div>' +
+    '<div style="text-align:center;margin-top:14px;font-size:11px;color:var(--t3)">\uD83D\uDD12 Secure per-account storage \u00b7 Add to Home Screen for app experience</div>' +
+    '</div></div>';
+}
+function switchTab(m) {
+  authMode = m;
+  const nr = document.getElementById('name-row');
+  const sub = document.getElementById('a-submit');
+  const tl = document.getElementById('tab-login');
+  const ts = document.getElementById('tab-signup');
+  if (nr) nr.style.display = m === 'signup' ? 'flex' : 'none';
+  if (sub) sub.textContent = m === 'login' ? 'Log In' : m === 'signup' ? 'Create Account' : 'Send Reset Link';
+  if (tl) { tl.style.background = m === 'login' ? 'var(--a)' : 'var(--s2)'; tl.style.color = m === 'login' ? '#fff' : 'var(--t2)'; }
+  if (ts) { ts.style.background = m === 'signup' ? 'var(--a)' : 'var(--s2)'; ts.style.color = m === 'signup' ? '#fff' : 'var(--t2)'; }
+}
+function togglePw() { const i = document.getElementById('a-pw'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; }
+function showAuthMsg(msg, ok=false) {
+  const el = document.getElementById('a-msg');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = ok ? 'var(--oks)' : 'var(--errs)';
+  el.style.color = ok ? 'var(--ok)' : 'var(--err)';
+  el.textContent = msg;
+}
+function doAuth() {
+  const email = (document.getElementById('a-email')||{}).value||'';
+  const pw = (document.getElementById('a-pw')||{}).value||'';
+  const name = (document.getElementById('a-name')||{}).value||'';
+  const sub = document.getElementById('a-submit');
+  if (sub) { sub.innerHTML = '<span class="spin"></span>'; sub.disabled = true; }
+  setTimeout(() => {
+    if (sub) sub.disabled = false;
+    if (authMode === 'forgot') { showAuthMsg('\u2713 Reset link sent to ' + email, true); return; }
+    if (authMode === 'signup') {
+      if (!name||!email||!pw) { showAuthMsg('Please fill all fields.'); if(sub) sub.textContent='Create Account'; return; }
+      const users = db.get('users', []);
+      if (users.find(u => u.email === email)) { showAuthMsg('Email already registered.'); if(sub) sub.textContent='Create Account'; return; }
+      const nu = {id:uid(), name, email, password:pw};
+      db.set('users', [...users, nu]); db.set('user', nu);
+      STATE.user = nu; seedData(); render(); return;
+    }
+    const users = db.get('users', []);
+    const u = users.find(x => x.email===email && x.password===pw);
+    if (u) { db.set('user', u); STATE.user = u; seedData(); render(); }
+    else {
+      const nu = {id:uid(), name:email.split('@')[0]||'User', email, password:pw};
+      db.set('users', [...users, nu]); db.set('user', nu);
+      STATE.user = nu; seedData(); render();
+    }
+  }, 700);
+}
+function bindAuth() { document.getElementById('a-pw')?.addEventListener('keydown', e => { if(e.key==='Enter') doAuth(); }); }
+
+// ── TOP BAR ──────────────────────────────────────────────────────────────────
+function renderTopBar() {
+  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Weekly Report',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings'};
+  const shareBtn = STATE.isViewer ? '' : '<button class="btn bic" onclick="openShareModal()" style="' + (SHARE.enabled?'background:var(--as);color:var(--a)':'') + '" title="Share">\uD83D\uDD17</button>';
+  const viewerBadge = STATE.isViewer ? '<div class="viewer-badge">\uD83D\uDC41 VIEWER</div>' : '';
+  return '<div id="topbar">' +
+    '<div style="font-family:Outfit,sans-serif;font-weight:800;font-size:18px;color:var(--a)">H2 Line</div>' +
+    '<div style="width:1px;height:14px;background:var(--b)"></div>' +
+    '<div style="font-size:13px;color:var(--t2);font-weight:500;flex:1">' + (labels[STATE.page]||STATE.page) + '</div>' +
+    shareBtn +
+    '<button class="btn bic" onclick="goPage(\'settings\')" style="' + (STATE.page==='settings'?'background:var(--as);color:var(--a)':'') + '">' + IC.cog + '</button>' +
+    '</div>' + viewerBadge;
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function renderNav() {
+  const tabs = [
+    {id:'dashboard',ico:IC.home,lbl:'Home'},
+    {id:'sales',ico:IC.sales,lbl:'Sales'},
+    {id:'invoices',ico:IC.inv,lbl:'Invoices'},
+    {id:'report',ico:IC.report,lbl:'Reports'},
+    {id:'shops',ico:IC.shop,lbl:'Shops'},
+    {id:'items',ico:IC.items,lbl:'Items'},
+    {id:'importexport',ico:IC.ul,lbl:'Data'},
+  ];
+  return '<nav id="bottomnav">' + tabs.map(t =>
+    '<button class="nb' + (STATE.page===t.id?' on':'') + '" onclick="goPage(\'' + t.id + '\')">' +
+    t.ico + '<span>' + t.lbl + '</span><div class="ndot"></div></button>'
+  ).join('') + '</nav>';
+}
+function renderFab() {
+  if (['settings','importexport'].includes(STATE.page)) return '';
+  return '<button id="fab" onclick="openAddSale()">' + IC.plus + '</button>';
+}
+function goPage(p) { STATE.page = p; STATE.modal = null; render(); }
+
+// ── PAGE ROUTER ──────────────────────────────────────────────────────────────
+function renderPage() {
+  switch(STATE.page) {
+    case 'dashboard': return renderDashboard();
+    case 'sales': return renderSalesPage();
+    case 'invoices': return renderInvoices();
+    case 'report': return renderReport();
+    case 'shops': return renderShops();
+    case 'items': return renderItems();
+    case 'importexport': return renderImportExport();
+    case 'settings': return renderSettings();
+    default: return renderDashboard();
+  }
+}
+function bindPage() {
+  if (STATE.page==='sales') bindSales();
+  else if (STATE.page==='shops') bindShops();
+  else if (STATE.page==='items') bindItems();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const S = STATE.sales;
+  const total = S.reduce((a,r) => a+r.finalTotal, 0);
+  const paid = S.filter(r => r.paymentStatus==='Paid').reduce((a,r) => a+r.finalTotal, 0);
+  const pend = S.filter(r => r.paymentStatus==='Pending').reduce((a,r) => a+r.finalTotal, 0);
+  const gstTot = S.reduce((a,r) => a+(r.gstAmt||0), 0);
+  const shopMap = {};
+  S.forEach(r => { shopMap[r.shopName] = (shopMap[r.shopName]||0) + r.finalTotal; });
+  const topShops = Object.entries(shopMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const itemMap = {};
+  S.forEach(r => { itemMap[r.itemName] = (itemMap[r.itemName]||0) + r.finalTotal; });
+  const topItems = Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const wmap = {};
+  S.forEach(r => { const w=weekStart(r.date); wmap[w]=(wmap[w]||0)+r.finalTotal; });
+  const wks = Object.keys(wmap).sort().slice(-7);
+  const wdata = wks.length>=2 ? wks.map(w=>wmap[w]) : [1200,1800,1500,2400,1900,2600,total||2000];
+  const mx = Math.max(...wdata, 1);
+  const recent = [...S].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+
+  return '<div class="fu">' +
+    '<div style="margin-bottom:18px">' +
+      '<div style="font-size:12px;color:var(--t2)">' + new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}) + '</div>' +
+      '<h1 style="font-size:24px;font-weight:800;margin-top:2px">Good day \uD83D\uDC4B</h1>' +
+    '</div>' +
+    '<div class="kgrid stag" style="margin-bottom:16px">' +
+      '<div class="kcard fu"><div class="klbl">Total Sales</div><div class="kval" style="color:var(--a)">' + money(total) + '</div><div class="ksub">' + S.length + ' transactions</div></div>' +
+      '<div class="kcard fu"><div class="klbl">Collected</div><div class="kval" style="color:var(--ok)">' + money(paid) + '</div><div class="ksub">' + (total>0?Math.round(paid/total*100):0) + '% of total</div></div>' +
+      '<div class="kcard fu"><div class="klbl">Pending</div><div class="kval" style="color:var(--warn)">' + money(pend) + '</div><div class="ksub">' + S.filter(r=>r.paymentStatus==='Pending').length + ' orders</div></div>' +
+      '<div class="kcard fu"><div class="klbl">GST Collected</div><div class="kval" style="color:var(--gst)">' + money(gstTot) + '</div><div class="ksub">@ 8% rate</div></div>' +
+    '</div>' +
+    '<div class="card" style="margin-bottom:14px">' +
+      '<div class="sh"><div class="st">Weekly Trend</div><button class="btn bg2" style="font-size:11px;padding:5px 9px" onclick="goPage(\'report\')">View \u2192</button></div>' +
+      '<div class="cbw">' + wdata.map((v,i) => '<div class="cb" style="height:' + Math.round(v/mx*100) + '%;background:' + (i===wdata.length-1?'var(--a)':'var(--as)') + '"></div>').join('') + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+      '<div class="card csm"><div class="st" style="font-size:13px;margin-bottom:10px">Top Shops</div>' +
+        (topShops.length ? topShops.map(([n,t],i) => '<div style="display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px"><span><span style="color:var(--a);margin-right:4px">' + (i+1) + '.</span>' + n + '</span><span style="color:var(--t2)">' + money(t) + '</span></div>').join('') : '<div style="font-size:11px;color:var(--t3)">No data yet</div>') +
+      '</div>' +
+      '<div class="card csm"><div class="st" style="font-size:13px;margin-bottom:10px">Top Items</div>' +
+        (topItems.length ? topItems.map(([n,t],i) => '<div style="display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px"><span><span style="color:var(--a);margin-right:4px">' + (i+1) + '.</span>' + n + '</span><span style="color:var(--t2)">' + money(t) + '</span></div>').join('') : '<div style="font-size:11px;color:var(--t3)">No data yet</div>') +
+      '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="sh"><div class="st">Recent Activity</div><button class="btn bg2" style="font-size:11px;padding:5px 9px" onclick="goPage(\'sales\')">All \u2192</button></div>' +
+      (recent.length ? recent.map(r =>
+        '<div class="li"><div class="lav">' + IC.sales + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="ltit" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.itemName + '</div>' +
+        '<div class="lsub">' + r.shopName + ' \u00b7 ' + r.date + (r.gstInclusive?' \u00b7 <span class="badge bgst" style="font-size:9px">GST Incl.</span>':'') + '</div></div>' +
+        '<div class="lrt"><div style="font-size:13px;font-weight:700">' + money(r.finalTotal) + '</div>' +
+        '<span class="badge ' + (r.paymentStatus==='Paid'?'bpaid':r.paymentStatus==='Partial'?'bpart':'bpend') + '">' + r.paymentStatus + '</span></div></div>'
+      ).join('') : '<div class="empty"><div class="eico">\uD83D\uDCE6</div><div class="esub">No sales yet. Tap + to add!</div></div>') +
+    '</div></div>';
+}
+
+// ── ADD SALE ──────────────────────────────────────────────────────────────────
+function openAddSale() { STATE.modal = {type:'addsale'}; render(); }
+
+function renderAddSaleModal() {
+  const today = new Date().toISOString().split('T')[0];
+  return '<div class="mhan"></div><div class="mtit">Add Sale Entry</div><div class="fg">' +
+    '<div class="fr"><div class="iw"><label class="il">Date *</label><input id="sd-date" class="inp" type="date" value="' + today + '"></div>' +
+    '<div class="iw"><label class="il">Invoice ID</label><input id="sd-inv" class="inp" placeholder="INV-001"></div></div>' +
+
+    '<div class="iw acw"><label class="il">Shop Name *</label>' +
+    '<input id="sd-shop" class="inp" placeholder="Search or add shop" oninput="acShow(\'sd-shop\',\'ac-shop\',STATE.shops.map(s=>s.name))" onfocus="acShow(\'sd-shop\',\'ac-shop\',STATE.shops.map(s=>s.name))" onblur="setTimeout(()=>acHide(\'ac-shop\'),200)">' +
+    '<div id="ac-shop" class="acd"></div></div>' +
+
+    '<div class="iw"><label class="il">Area</label><input id="sd-area" class="inp" placeholder="e.g. Bur Dubai"></div>' +
+
+    '<div class="iw acw"><label class="il">Item Name *</label>' +
+    '<input id="sd-item" class="inp" placeholder="Search or add item" oninput="acShow(\'sd-item\',\'ac-item\',STATE.items.map(i=>i.name));onItemPick()" onfocus="acShow(\'sd-item\',\'ac-item\',STATE.items.map(i=>i.name))" onblur="setTimeout(()=>acHide(\'ac-item\'),200)">' +
+    '<div id="ac-item" class="acd"></div></div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Category</label><input id="sd-cat" class="inp" placeholder="e.g. Dairy"></div>' +
+    '<div class="iw"><label class="il">Price Type</label><select id="sd-ptype" class="inp" onchange="onPtypeChange()">' +
+    '<option value="unit">Unit Price</option><option value="halfDozen">Half Dozen (6)</option><option value="casePrice">Case Price (12)</option>' +
+    '</select></div></div>' +
+
+    '<div id="tier-box" class="ptbox" style="display:none">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Catalog Pricing</div>' +
+    '<div class="ptrow"><span class="ptlbl">Unit</span><span class="ptval" id="t-unit">\u2014</span></div>' +
+    '<div class="ptrow"><span class="ptlbl" style="color:var(--half)">Half Dozen (6)</span><span class="ptval" style="color:var(--half)" id="t-half">\u2014</span></div>' +
+    '<div class="ptrow"><span class="ptlbl" style="color:var(--case)">Case (12)</span><span class="ptval" style="color:var(--case)" id="t-case">\u2014</span></div>' +
+    '</div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Unit Price *</label><input id="sd-uprice" class="inp" type="number" placeholder="0.00" step="0.01" oninput="recalc()"></div>' +
+    '<div class="iw"><label class="il">Quantity *</label><input id="sd-qty" class="inp" type="number" placeholder="1" step="0.5" oninput="recalc()"></div></div>' +
+
+    '<div style="background:var(--gsts);border:1px solid var(--gst);border-radius:var(--rs);padding:12px 13px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gst)">GST @ 8%</div>' +
+    '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--gst)">' +
+    '<input type="checkbox" id="sd-gstinc" onchange="recalc()" style="width:16px;height:16px;accent-color:var(--gst)"> GST Already Included</label></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">Line Total</div><div id="d-line" style="font-size:15px;font-weight:700;color:var(--t)">' + money(0) + '</div></div>' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">GST (8%)</div><div id="d-gst" style="font-size:15px;font-weight:700;color:var(--gst)">' + money(0) + '</div></div>' +
+    '<div><div style="font-size:10px;color:var(--gst);font-weight:600;text-transform:uppercase;margin-bottom:3px">Final Total</div><div id="d-final" style="font-size:17px;font-weight:800;color:var(--a)">' + money(0) + '</div></div>' +
+    '</div><div id="gst-note" style="margin-top:8px;font-size:11px;color:var(--gst);display:none"></div></div>' +
+
+    '<div class="fr"><div class="iw"><label class="il">Payment Status</label><select id="sd-status" class="inp"><option>Pending</option><option>Paid</option><option>Partial</option></select></div>' +
+    '<div class="iw"><label class="il">Notes</label><input id="sd-notes" class="inp" placeholder="Any notes\u2026"></div></div>' +
+
+    '<div style="display:flex;gap:10px;margin-top:4px"><button class="btn bs" style="flex:1;height:48px" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn bp" style="flex:2;height:48px" onclick="saveSale()">Save Sale</button></div></div>';
+}
+
+// Autocomplete
+function acShow(inputId, dropId, list) {
+  const val = (document.getElementById(inputId)||{}).value||'';
+  const drop = document.getElementById(dropId);
+  if (!drop) return;
+  const filtered = list.filter(s => s && s.toLowerCase().includes(val.toLowerCase()) && s.toLowerCase() !== val.toLowerCase());
+  if (!filtered.length) { drop.style.display='none'; return; }
+  drop.style.display = 'block';
+  drop.innerHTML = filtered.slice(0,8).map(s => '<div class="aci" onmousedown="acPick(\'' + inputId + '\',\'' + dropId + '\',decodeURIComponent(\'' + encodeURIComponent(s) + '\'))">' + s + '</div>').join('');
+}
+function acHide(id) { const el=document.getElementById(id); if(el) el.style.display='none'; }
+function acPick(inputId, dropId, val) {
+  const el = document.getElementById(inputId);
+  if (el) el.value = val;
+  acHide(dropId);
+  if (inputId==='sd-item') onItemPick();
+  if (inputId==='sd-shop') {
+    const sh = STATE.shops.find(s=>s.name===val);
+    if (sh) { const a=document.getElementById('sd-area'); if(a&&!a.value) a.value=sh.area||''; }
+  }
+}
+function onItemPick() {
+  const name = (document.getElementById('sd-item')||{}).value||'';
+  const item = STATE.items.find(i=>i.name.toLowerCase()===name.toLowerCase());
+  const ptype = (document.getElementById('sd-ptype')||{}).value||'unit';
+  if (item) {
+    const cat = document.getElementById('sd-cat'); if(cat&&!cat.value) cat.value=item.category||'';
+    const tiers = calcTiers(item);
+    const up = document.getElementById('sd-uprice'); if(up) up.value=fmt2(getTierPrice(item, ptype));
+    const tb = document.getElementById('tier-box');
+    if (tb) {
+      tb.style.display='block';
+      const tu=document.getElementById('t-unit'), th=document.getElementById('t-half'), tc=document.getElementById('t-case');
+      if(tu) tu.textContent=money(tiers.unit)+' each';
+      if(th) th.textContent=money(tiers.halfDozen)+' for 6';
+      if(tc) tc.textContent=money(tiers.casePrice)+' for 12';
+    }
+  } else {
+    const tb=document.getElementById('tier-box'); if(tb) tb.style.display='none';
+  }
+  recalc();
+}
+function onPtypeChange() {
+  const name = (document.getElementById('sd-item')||{}).value||'';
+  const item = STATE.items.find(i=>i.name.toLowerCase()===name.toLowerCase());
+  if (item) {
+    const ptype = (document.getElementById('sd-ptype')||{}).value||'unit';
+    const up = document.getElementById('sd-uprice');
+    if (up) up.value = fmt2(getTierPrice(item, ptype));
+  }
+  recalc();
+}
+function recalc() {
+  const up = parseFloat((document.getElementById('sd-uprice')||{}).value)||0;
+  const qty = parseFloat((document.getElementById('sd-qty')||{}).value)||0;
+  const inc = (document.getElementById('sd-gstinc')||{}).checked||false;
+  const lt = +(up*qty).toFixed(2);
+  const g = calcGST(lt, inc);
+  const dl=document.getElementById('d-line'), dg=document.getElementById('d-gst'), df=document.getElementById('d-final'), dn=document.getElementById('gst-note');
+  if(dl) dl.textContent=money(lt);
+  if(dg) dg.textContent=money(g.gst);
+  if(df) df.textContent=money(g.total);
+  if(dn) { dn.style.display=lt>0?'block':'none'; dn.textContent=inc?'GST included: base '+money(g.base)+' + GST '+money(g.gst)+' = '+money(g.total):(lt>0?'+ 8% GST = '+money(g.total)+' total':''); }
+}
+function saveSale() {
+  const v = id => (document.getElementById(id)||{}).value||'';
+  const date=v('sd-date'), shopName=v('sd-shop'), area=v('sd-area'), invoiceId=v('sd-inv');
+  const itemName=v('sd-item'), category=v('sd-cat'), ptype=v('sd-ptype')||'unit';
+  const up=parseFloat(v('sd-uprice'))||0, qty=parseFloat(v('sd-qty'))||0;
+  const gstInclusive=(document.getElementById('sd-gstinc')||{}).checked||false;
+  const paymentStatus=v('sd-status')||'Pending', notes=v('sd-notes');
+  if(!shopName||!itemName||!qty||!up) { showToast('\u26A0\uFE0F Fill: Shop, Item, Qty, Price'); return; }
+  const lt=+(up*qty).toFixed(2);
+  const g=calcGST(lt, gstInclusive);
+  const sale={id:uid(),date,shopName,area,invoiceId,itemName,category,priceType:ptype,quantity:qty,unitPrice:up,lineTotal:lt,gstInclusive,gstRate:GST_RATE,gstAmt:g.gst,finalTotal:g.total,currency:STATE.currency||'MVR',paymentStatus,notes};
+  STATE.sales.push(sale);
+  if(!STATE.items.find(i=>i.name.toLowerCase()===itemName.toLowerCase())) {
+    const base = ptype === 'unit' ? up : ptype === 'halfDozen' ? +(up / 6).toFixed(2) : +(up / 12).toFixed(2);
+    const tiers = calcTiers(base);
+    STATE.items.push({id:uid(),name:itemName,category,unitPrice:tiers.unit,halfPrice:tiers.halfDozen,casePrice:tiers.casePrice});
+  }
+  if(!STATE.shops.find(s=>s.name.toLowerCase()===shopName.toLowerCase()))
+    STATE.shops.push({id:uid(),name:shopName,area,owner:'',contact:'',priority:'Medium',notes:'',lastVisit:date});
+  saveState(); showToast('\u2713 Sale saved!'); closeModal();
+}
+
+// ── SALES PAGE ────────────────────────────────────────────────────────────────
+function getVisibleSales() {
+  const srch = ((document.getElementById('s-srch') || {}).value || '').toLowerCase();
+  const stat = (document.getElementById('s-stat') || {}).value || '';
+  const sort = (document.getElementById('s-sort') || {}).value || 'date';
+  let rows = [...STATE.sales];
+  if (stat) rows = rows.filter(r => r.paymentStatus === stat);
+  if (srch) rows = rows.filter(r => (r.shopName || '').toLowerCase().includes(srch) || (r.itemName || '').toLowerCase().includes(srch) || (r.invoiceId || '').toLowerCase().includes(srch));
+  rows.sort((a,b) => sort === 'date' ? new Date(b.date) - new Date(a.date) : (b.finalTotal || 0) - (a.finalTotal || 0));
+  return rows;
+}
+function renderSalesPage() {
+  const total = STATE.sales.reduce((a,r) => a + (r.finalTotal || 0), 0);
+  const paid = STATE.sales.filter(r => r.paymentStatus === 'Paid').reduce((a,r) => a + (r.finalTotal || 0), 0);
+  const pend = STATE.sales.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + (r.finalTotal || 0), 0);
+  return '<div class="fu">' +
+    '<div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Sales History</h1><div style="font-size:12px;color:var(--t2)">' + STATE.sales.length + ' records</div></div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:14px">' +
+    [['Total', total, 'var(--a)'], ['Paid', paid, 'var(--ok)'], ['Pending', pend, 'var(--warn)']].map(([l,v,c]) =>
+      '<div style="flex:1;background:var(--s);border:1px solid var(--b);border-radius:var(--rs);padding:10px"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.06em">' + l + '</div><div style="font-size:13px;font-weight:700;color:' + c + ';margin-top:2px">' + money(v) + '</div></div>'
+    ).join('') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">' +
+      '<div class="srchw" style="flex:1;min-width:180px"><span class="srchi">' + IC.srch + '</span><input id="s-srch" class="inp srchin" placeholder="Search…" style="height:38px;font-size:13px" oninput="filterSales()"></div>' +
+      '<select id="s-stat" class="inp" style="height:38px;font-size:12px;padding:0 10px;width:auto" onchange="filterSales()"><option value="">All</option><option>Paid</option><option>Pending</option><option>Partial</option></select>' +
+      '<select id="s-sort" class="inp" style="height:38px;font-size:12px;padding:0 10px;width:auto" onchange="filterSales()"><option value="date">Date</option><option value="total">Amount</option></select>' +
+      '<button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="toggleSalesMassMode()">' + (salesMassMode ? 'Exit Mass Delete' : 'Mass Delete') + '</button>' +
+      (salesMassMode ? '<button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="selectAllVisibleSales()">Select All</button><button class="btn bs" style="height:38px;padding:0 12px;font-size:12px" onclick="clearSaleSelection()">Clear</button><button class="btn bd" style="height:38px;padding:0 12px;font-size:12px" onclick="deleteSelectedSales()">Delete Selected (' + selectedSales.size + ')</button>' : '') +
+    '</div><div id="sales-tbl"></div></div>';
+}
+function bindSales() { filterSales(); }
+function filterSales() {
+  const rows = getVisibleSales();
+  const tbl = document.getElementById('sales-tbl');
+  if (!tbl) return;
+  if (!rows.length) { tbl.innerHTML = '<div class="empty"><div class="eico">🔍</div><div class="etit">No results</div></div>'; return; }
+  tbl.innerHTML = '<div class="tw"><table class="dt"><thead><tr>' +
+    (salesMassMode ? '<th style="width:34px"></th>' : '') +
+    '<th>Date</th><th>Shop</th><th>Item</th><th>Type</th><th class="nr">Total</th><th>GST</th><th>Status</th><th></th></tr></thead><tbody>' +
+    rows.map(r => '<tr' + (selectedSales.has(r.id) ? ' style="background:var(--as)"' : '') + '>' +
+      (salesMassMode ? '<td><input type="checkbox" ' + (selectedSales.has(r.id) ? 'checked' : '') + ' onchange="toggleSaleSelect(\'' + r.id + '\', this.checked)" style="width:18px;height:18px;accent-color:var(--a)"></td>' : '') +
+      '<td style="white-space:nowrap;color:var(--t2);font-size:11px">' + r.date + '</td>' +
+      '<td><div style="font-weight:600;font-size:12px">' + r.shopName + '</div><div style="font-size:10px;color:var(--t3)">' + (r.area||'') + '</div></td>' +
+      '<td><div style="font-size:12px">' + r.itemName + '</div><div style="font-size:10px;color:var(--t3)">' + (r.category||'') + '</div></td>' +
+      '<td><span class="badge ' + (r.priceType==='casePrice'?'bcase':r.priceType==='halfDozen'?'bhalf':'bpart') + '">' + tierLabel(r.priceType) + '</span></td>' +
+      '<td class="nr" style="font-weight:700;font-size:13px">' + money(r.finalTotal) + '</td>' +
+      '<td><span class="badge bgst" style="font-size:9px">' + (r.gstInclusive?'Incl.':'+ 8%') + '</span></td>' +
+      '<td><span class="badge ' + (r.paymentStatus==='Paid'?'bpaid':r.paymentStatus==='Partial'?'bpart':'bpend') + '">' + r.paymentStatus + '</span></td>' +
+      '<td><div style="display:flex;gap:4px">' +
+        (r.paymentStatus!=='Paid' ? '<button class="btn bic" style="width:28px;height:28px;background:var(--oks);color:var(--ok)" onclick="markPaid(\'' + r.id + '\')">' + IC.chk + '</button>' : '') +
+        '<button class="btn bic" style="width:28px;height:28px;background:var(--errs);color:var(--err)" onclick="delSale(\'' + r.id + '\')">' + IC.trash + '</button>' +
+      '</div></td></tr>'
+    ).join('') + '</tbody></table></div>';
+}
+function toggleSalesMassMode() {
+  salesMassMode = !salesMassMode;
+  selectedSales.clear();
+  render();
+}
+function toggleSaleSelect(id, checked) {
+  if (checked) selectedSales.add(id);
+  else selectedSales.delete(id);
+  filterSales();
+}
+function selectAllVisibleSales() {
+  getVisibleSales().forEach(r => selectedSales.add(r.id));
+  filterSales();
+}
+function clearSaleSelection() {
+  selectedSales.clear();
+  filterSales();
+}
+function deleteSelectedSales() {
+  if (!selectedSales.size) { showToast('Nothing selected'); return; }
+  if (!confirm('Delete ' + selectedSales.size + ' selected entries?')) return;
+  STATE.sales = STATE.sales.filter(s => !selectedSales.has(s.id));
+  selectedSales.clear();
+  saveState();
+  showToast('Deleted selected');
+  render();
+}
+function markPaid(id) { STATE.sales = STATE.sales.map(s => s.id===id ? {...s, paymentStatus:'Paid'} : s); saveState(); showToast('✓ Marked Paid'); render(); }
+function delSale(id) { if(confirm('Delete this sale?')) { STATE.sales = STATE.sales.filter(s=>s.id!==id); saveState(); showToast('Deleted'); render(); } }
+
+// ── INVOICES ──────────────────────────────────────────────────────────────────
+let invDetail = null;
+let salesMassMode = false;
+let selectedSales = new Set();
+function renderInvoices() {
+  const imap = {};
+  STATE.sales.forEach(s => {
+    const key = s.invoiceId || (s.shopName + '-' + s.date);
+    if (!imap[key]) imap[key] = {id:key,shopName:s.shopName,area:s.area||'',date:s.date,items:[],lineTotal:0,gstTotal:0,finalTotal:0,paid:0};
+    imap[key].items.push(s);
+    imap[key].lineTotal += s.lineTotal||0;
+    imap[key].gstTotal += s.gstAmt||0;
+    imap[key].finalTotal += s.finalTotal||0;
+    if(s.paymentStatus==='Paid') imap[key].paid += s.finalTotal||0;
+  });
+  const invs = Object.values(imap).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (invDetail) {
+    const inv = invs.find(i=>i.id===invDetail);
+    if (inv) return renderInvDetail(inv);
+    invDetail = null;
+  }
+  return '<div class="fu"><div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Invoices</h1><div style="font-size:12px;color:var(--t2)">' + invs.length + ' invoices</div></div>' +
+    (invs.length ? invs.map(inv => {
+      const stat = inv.paid>=inv.finalTotal&&inv.finalTotal>0?'Paid':inv.paid>0?'Partial':'Pending';
+      return '<div class="card csm chov" style="margin-bottom:10px;cursor:pointer" onclick="invDetail=\'' + inv.id + '\';render()">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div><div style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em">' + inv.id + '</div>' +
+        '<div style="font-size:16px;font-weight:700;margin-top:2px">' + inv.shopName + '</div>' +
+        '<div style="font-size:11px;color:var(--t2)">' + inv.area + ' \u00b7 ' + inv.date + ' \u00b7 ' + inv.items.length + ' items</div></div>' +
+        '<div style="text-align:right"><div style="font-size:18px;font-weight:800;color:var(--a)">' + money(inv.finalTotal) + '</div>' +
+        '<span class="badge ' + (stat==='Paid'?'bpaid':stat==='Partial'?'bpart':'bpend') + '">' + stat + '</span></div></div>' +
+        (stat!=='Paid'&&inv.finalTotal>0?'<div class="pb" style="margin-top:10px"><div class="pf" style="width:' + Math.round(inv.paid/inv.finalTotal*100) + '%;background:' + (stat==='Partial'?'var(--warn)':'var(--a)') + '"></div></div>':'') +
+        '</div>';
+    }).join('') : '<div class="empty"><div class="eico">\uD83E\uDDFE</div><div class="etit">No invoices yet</div><div class="esub">Add sales with Invoice IDs</div></div>') + '</div>';
+}
+function renderInvDetail(inv) {
+  const stat = inv.paid>=inv.finalTotal&&inv.finalTotal>0?'Paid':inv.paid>0?'Partial':'Pending';
+  const base = inv.items.reduce((a,i)=>a+(i.gstInclusive?i.finalTotal/1.08:(i.lineTotal||0)),0);
+  return '<div class="fu"><button class="btn bg2" style="margin-bottom:14px;padding:6px 0" onclick="invDetail=null;render()">' + IC.back + ' Back</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">' +
+    '<div><div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.07em">INVOICE</div>' +
+    '<h2 style="font-size:20px;font-weight:800">' + inv.id + '</h2>' +
+    '<div style="font-size:13px;color:var(--t2)">' + inv.shopName + ' \u00b7 ' + inv.area + '</div>' +
+    '<div style="font-size:11px;color:var(--t3)">' + inv.date + '</div></div>' +
+    '<span class="badge ' + (stat==='Paid'?'bpaid':stat==='Partial'?'bpart':'bpend') + '" style="font-size:12px;padding:5px 13px">' + stat + '</span></div>' +
+    '<div class="tw" style="margin-bottom:14px"><table class="dt"><thead><tr><th>Item</th><th>Type</th><th class="nr">Qty</th><th class="nr">Unit</th><th class="nr">Line</th><th>GST</th><th class="nr">Final</th></tr></thead><tbody>' +
+    inv.items.map(it => '<tr>' +
+      '<td><div style="font-weight:600;font-size:12px">' + it.itemName + '</div><div style="font-size:10px;color:var(--t3)">' + (it.category||'') + '</div></td>' +
+      '<td><span class="badge ' + (it.priceType==='casePrice'?'bcase':it.priceType==='halfDozen'?'bhalf':'bpart') + '" style="font-size:9px">' + tierLabel(it.priceType) + '</span></td>' +
+      '<td class="nr">' + it.quantity + '</td><td class="nr" style="font-size:11px">' + money(it.unitPrice) + '</td>' +
+      '<td class="nr">' + money(it.lineTotal||0) + '</td>' +
+      '<td><span class="badge bgst" style="font-size:9px">' + (it.gstInclusive?'Incl.':'+ 8%') + '</span><div style="font-size:10px;color:var(--gst)">' + money(it.gstAmt) + '</div></td>' +
+      '<td class="nr" style="font-weight:700;color:var(--a)">' + money(it.finalTotal) + '</td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    '<div style="background:var(--s2);border-radius:var(--rs);padding:14px;display:flex;flex-direction:column;gap:7px">' +
+    '<div class="gstrow"><span style="color:var(--t2)">Subtotal (ex-GST)</span><span style="font-weight:600">' + money(base) + '</span></div>' +
+    '<div class="gstrow"><span style="color:var(--gst)">GST @ 8%</span><span style="color:var(--gst);font-weight:600">' + money(inv.gstTotal) + '</span></div>' +
+    '<div style="height:1px;background:var(--b)"></div>' +
+    '<div class="gstrow" style="font-size:16px;font-weight:800"><span>Total (inc. GST)</span><span style="color:var(--a)">' + money(inv.finalTotal) + '</span></div>' +
+    (inv.paid>0?'<div class="gstrow" style="color:var(--ok);font-weight:600"><span>Amount Paid</span><span>' + money(inv.paid) + '</span></div>' +
+    '<div class="gstrow" style="color:var(--warn);font-weight:700"><span>Balance Due</span><span>' + money(inv.finalTotal-inv.paid) + '</span></div>':'') +
+    '</div></div>';
+}
+
+// ── WEEKLY REPORT ─────────────────────────────────────────────────────────────
+let selWeek = null;
+function renderReport() {
+  const wmap = {};
+  STATE.sales.forEach(s => { const w=weekStart(s.date); if(!wmap[w]) wmap[w]=[]; wmap[w].push(s); });
+  const weeks = Object.keys(wmap).sort().reverse();
+  if (weeks.length && !selWeek) selWeek = weeks[0];
+  const wd = (selWeek && wmap[selWeek]) ? wmap[selWeek] : [];
+  const wTot=wd.reduce((a,r)=>a+r.finalTotal,0);
+  const wPaid=wd.filter(r=>r.paymentStatus==='Paid').reduce((a,r)=>a+r.finalTotal,0);
+  const wPend=wd.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+r.finalTotal,0);
+  const wGST=wd.reduce((a,r)=>a+(r.gstAmt||0),0);
+  return '<div class="fu"><div style="margin-bottom:14px"><h1 style="font-size:22px;font-weight:800">Weekly Report</h1><div style="font-size:12px;color:var(--t2)">Business week: Saturday \u2013 Thursday</div></div>' +
+    '<div style="overflow-x:auto;display:flex;gap:7px;margin-bottom:14px;padding-bottom:4px">' +
+    (weeks.length ? weeks.map(w => '<button class="chip' + (selWeek===w?' on':'') + '" style="flex-shrink:0" onclick="selWeek=\'' + w + '\';render()">' + weekLabel(w) + '</button>').join('') : '<div style="font-size:12px;color:var(--t3)">No data yet</div>') + '</div>' +
+    (wd.length ? '' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">' +
+    [['Total',wTot,'var(--a)'],['Paid',wPaid,'var(--ok)'],['Pending',wPend,'var(--warn)'],['GST',wGST,'var(--gst)']].map(([l,v,c]) =>
+      '<div style="background:var(--s);border:1px solid var(--b);border-radius:var(--rs);padding:10px"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase">' + l + '</div><div style="font-size:12px;font-weight:800;color:' + c + ';margin-top:2px">' + money(v) + '</div></div>'
+    ).join('') + '</div>' +
+    '<div class="tw"><table class="dt"><thead><tr><th>Date</th><th>Shop</th><th>Item</th><th>Type</th><th class="nr">GST</th><th class="nr">Total</th><th>Status</th></tr></thead><tbody>' +
+    wd.map(s => '<tr>' +
+      '<td style="font-size:10px;color:var(--t2);white-space:nowrap">' + s.date + '</td>' +
+      '<td style="font-weight:600;font-size:12px">' + s.shopName + '</td>' +
+      '<td style="font-size:11px;color:var(--t2)">' + s.itemName + '</td>' +
+      '<td><span class="badge ' + (s.priceType==='casePrice'?'bcase':s.priceType==='halfDozen'?'bhalf':'bpart') + '" style="font-size:9px">' + tierLabel(s.priceType) + '</span></td>' +
+      '<td class="nr"><div style="font-size:10px;color:var(--gst)">' + money(s.gstAmt) + '</div><div style="font-size:9px;color:var(--t3)">' + (s.gstInclusive?'Incl.':'+ 8%') + '</div></td>' +
+      '<td class="nr" style="font-weight:700;font-size:13px">' + money(s.finalTotal) + '</td>' +
+      '<td><span class="badge ' + (s.paymentStatus==='Paid'?'bpaid':s.paymentStatus==='Partial'?'bpart':'bpend') + '">' + s.paymentStatus + '</span></td></tr>'
+    ).join('') + '</tbody></table></div>' +
+    '<div style="background:var(--s);border:1px solid var(--b);border-radius:0 0 var(--rm) var(--rm);border-top:none;padding:12px 14px;display:flex;flex-direction:column;gap:6px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2)"><span>Subtotal (ex-GST)</span><span>' + money(wd.reduce((a,r)=>a+(r.gstInclusive?r.finalTotal/1.08:(r.lineTotal||0)),0)) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gst)"><span>GST @ 8%</span><span>' + money(wGST) + '</span></div>' +
+    '<div style="height:1px;background:var(--b)"></div>' +
+    '<div style="display:flex;justify-content:space-between;font-family:Outfit,sans-serif;font-weight:800;font-size:16px"><span>Week Total</span><span style="color:var(--a)">' + money(wTot) + '</span></div></div>'
+    : '<div class="empty"><div class="eico">\uD83D\uDCCA</div><div class="etit">No data this week</div></div>') + '</div>';
+}
+
+// ── SHOPS ─────────────────────────────────────────────────────────────────────
+
+function renderShops() {
+  return '<div class="fu"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px">' +
+    '<div><h1 style="font-size:22px;font-weight:800">Shops</h1><div style="font-size:12px;color:var(--t2)">' + STATE.shops.length + ' shops</div></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
+      '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="toggleShopsMassMode()">' + (shopsMassMode ? 'Exit Mass Delete' : 'Mass Delete') + '</button>' +
+      (shopsMassMode ? '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="selectAllVisibleShops()">Select All</button><button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="clearShopSelection()">Clear</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteSelectedShops()">Delete Selected (' + selectedShops.size + ')</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteAllShops()">Delete All</button>' : '') +
+      '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="openShopModal(null)">' + IC.plus + ' Add</button></div></div>' +
+    '<div class="srchw" style="margin-bottom:12px"><span class="srchi">' + IC.srch + '</span><input id="sh-srch" class="inp srchin" placeholder="Search shops…" style="height:38px;font-size:13px" oninput="filterShops()"></div>' +
+    '<div id="shops-list"></div></div>';
+}
+function bindShops() { filterShops(); }
+function getVisibleShops() {
+  const srch = ((document.getElementById('sh-srch')||{}).value||'').toLowerCase();
+  return STATE.shops.filter(s=>!srch||s.name.toLowerCase().includes(srch)||(s.area||'').toLowerCase().includes(srch)||(s.owner||'').toLowerCase().includes(srch));
+}
+function toggleShopsMassMode() { shopsMassMode = !shopsMassMode; selectedShops.clear(); filterShops(); }
+function toggleShopSelect(id, checked) { if (checked) selectedShops.add(id); else selectedShops.delete(id); filterShops(); }
+function selectAllVisibleShops() { getVisibleShops().forEach(s=>selectedShops.add(s.id)); filterShops(); }
+function clearShopSelection() { selectedShops.clear(); filterShops(); }
+function deleteSelectedShops() {
+  if (!selectedShops.size) { showToast('Nothing selected'); return; }
+  if (!confirm('Delete ' + selectedShops.size + ' selected shops?')) return;
+  STATE.shops = STATE.shops.filter(s => !selectedShops.has(s.id));
+  selectedShops.clear();
+  saveState();
+  showToast('Deleted selected shops');
+  render();
+}
+function deleteAllShops() {
+  if (!confirm('Delete ALL shops?')) return;
+  STATE.shops = [];
+  selectedShops.clear();
+  saveState();
+  showToast('Deleted all shops');
+  render();
+}
+function filterShops() {
+  const shops = getVisibleShops();
+  const el = document.getElementById('shops-list'); if(!el) return;
+  if(!shops.length){el.innerHTML='<div class="empty"><div class="eico">🎪</div><div class="etit">No shops found</div></div>';return;}
+  el.innerHTML = shops.map(shop => {
+    const ss = STATE.sales.filter(r=>r.shopName===shop.name);
+    const stot = ss.reduce((a,r)=>a+r.finalTotal,0);
+    const spend = ss.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+r.finalTotal,0);
+    return '<div class="card csm chov" style="margin-bottom:10px;position:relative' + (selectedShops.has(shop.id) ? ';background:var(--as)' : '') + '">' +
+      (shopsMassMode ? '<div style="position:absolute;top:12px;right:12px"><input type="checkbox" ' + (selectedShops.has(shop.id)?'checked':'') + ' onchange="toggleShopSelect(\'' + shop.id + '\',this.checked)"></div>' : '') +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+      '<div style="flex:1"><div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">' +
+      '<div style="font-size:15px;font-weight:700">' + shop.name + '</div>' +
+      '<span class="badge ' + (shop.priority==='High'?'bpaid':shop.priority==='Medium'?'bpart':'') + '" style="font-size:9px">' + (shop.priority||'—') + '</span>' + (shop.type ? '<span class="tag" style="font-size:9px;margin-left:4px">' + shop.type + '</span>' : '') + '</div>' +
+      '<div style="font-size:11px;color:var(--t2)">' + (shop.owner?shop.owner+' · ':'') + (shop.area||'') + '</div>' +
+      (shop.contact?'<div style="font-size:11px;color:var(--t3)">📞 ' + shop.contact + '</div>':'') + '</div>' +
+      '<div style="text-align:right;margin-left:12px"><div style="font-size:15px;font-weight:800;color:var(--a)">' + money(stot) + '</div>' +
+      (spend>0?'<div style="font-size:10px;color:var(--warn)">' + money(spend) + ' due</div>':'') +
+      '<div style="font-size:10px;color:var(--t3)">' + ss.length + ' orders</div></div></div>' +
+      '<div style="display:flex;gap:7px;margin-top:10px">' +
+      '<button class="btn bs" style="flex:1;padding:7px 10px;font-size:12px" onclick="openShopModal(\'' + shop.id + '\')">' + IC.edit + ' Edit</button>' +
+      '<button class="btn bd" style="flex:1;padding:7px 10px;font-size:12px" onclick="delShop(\'' + shop.id + '\')">' + IC.trash + ' Remove</button>' +
+      '</div></div>';
+  }).join('');
+}
+function openShopModal(id) { STATE.modal={type:'shop',data:{id}}; render(); }
+function delShop(id) { if(confirm('Remove this shop?')){STATE.shops=STATE.shops.filter(s=>s.id!==id);saveState();showToast('Removed');render();} }
+function renderShopModal(id) {
+  const shop = id ? STATE.shops.find(s=>s.id===id) : null;
+  const v = k => shop ? (shop[k]||'') : '';
+  return '<div class="mhan"></div><div class="mtit">' + (shop?'Edit Shop':'Add Shop') + '</div><div class="fg">' +
+    '<div class="iw"><label class="il">Shop Name *</label><input id="sm-name" class="inp" value="' + v('name') + '" placeholder="e.g. Al Noor Mart"></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Owner</label><input id="sm-owner" class="inp" value="' + v('owner') + '" placeholder="Owner name"></div>' +
+    '<div class="iw"><label class="il">Contact</label><input id="sm-contact" class="inp" value="' + v('contact') + '" placeholder="Phone"></div></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Area</label><input id="sm-area" class="inp" value="' + v('area') + '" placeholder="e.g. Deira"></div>' +
+    '<div class="iw"><label class="il">Priority</label><select id="sm-priority" class="inp">' +
+    ['High','Medium','Low'].map(p=>'<option' + (v('priority')===p?' selected':'') + '>' + p + '</option>').join('') + '</select></div></div>' +
+    '<div class="iw"><label class="il">Notes</label><textarea id="sm-notes" class="inp">' + v('notes') + '</textarea></div>' +
+    '<div style="display:flex;gap:10px"><button class="btn bs" style="flex:1;height:46px" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn bp" style="flex:2;height:46px" onclick="saveShop(\'' + (id||'') + '\')">' + (shop?'Save Changes':'Add Shop') + '</button></div></div>';
+}
+function saveShop(id) {
+  const v = i => (document.getElementById(i)||{}).value||'';
+  const name = v('sm-name'); if(!name){showToast('\u26A0\uFE0F Shop name required');return;}
+  const data = {name,owner:v('sm-owner'),contact:v('sm-contact'),area:v('sm-area'),type:v('sm-type')||'',priority:v('sm-priority')||'Medium',notes:v('sm-notes')};
+  if(id) STATE.shops=STATE.shops.map(s=>s.id===id?{...s,...data}:s);
+  else STATE.shops.push({id:uid(),...data,lastVisit:new Date().toISOString().split('T')[0]});
+  saveState(); showToast('\u2713 Saved'); closeModal();
+}
+
+// ── ITEMS ─────────────────────────────────────────────────────────────────────
+
+function renderItems() {
+  const cats = [...new Set(STATE.items.map(i=>i.category).filter(Boolean))];
+  return '<div class="fu"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px">' +
+    '<div><h1 style="font-size:22px;font-weight:800">Items</h1><div style="font-size:12px;color:var(--t2)">' + STATE.items.length + ' products</div></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
+      '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="toggleItemsMassMode()">' + (itemsMassMode ? 'Exit Mass Delete' : 'Mass Delete') + '</button>' +
+      (itemsMassMode ? '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="selectAllVisibleItems()">Select All</button><button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="clearItemSelection()">Clear</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteSelectedItems()">Delete Selected (' + selectedItems.size + ')</button><button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteAllItems()">Delete All</button>' : '') +
+      '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="openItemModal(null)">' + IC.plus + ' Add</button></div></div>' +
+    '<div class="srchw" style="margin-bottom:10px"><span class="srchi">' + IC.srch + '</span><input id="it-srch" class="inp srchin" placeholder="Search items…" style="height:38px;font-size:13px" oninput="filterItems()"></div>' +
+    '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px">' +
+    '<button class="chip on" id="cat-all" onclick="setCat(\'\')">All</button>' +
+    cats.map(c=>'<button class="chip" id="cat-' + c.replace(/\s/g,'_') + '" onclick="setCat(\'' + c.replace(/'/g,'\\\'') + '\')">' + c + '</button>').join('') + '</div>' +
+    '<input type="hidden" id="cat-filter" value=""><div id="items-list"></div></div>';
+}
+function bindItems() { filterItems(); }
+function setCat(c) {
+  const el=document.getElementById('cat-filter'); if(el) el.value=c;
+  document.querySelectorAll('#content .chip').forEach(b=>b.classList.remove('on'));
+  const t=document.getElementById(c?'cat-'+c.replace(/\s/g,'_'):'cat-all'); if(t) t.classList.add('on');
+  filterItems();
+}
+function getVisibleItems() {
+  const srch = ((document.getElementById('it-srch')||{}).value||'').toLowerCase();
+  const cat = (document.getElementById('cat-filter')||{}).value||'';
+  return STATE.items.filter(i=>(!cat||i.category===cat)&&(!srch||i.name.toLowerCase().includes(srch)));
+}
+function toggleItemsMassMode() { itemsMassMode = !itemsMassMode; selectedItems.clear(); filterItems(); }
+function toggleItemSelect(id, checked) { if (checked) selectedItems.add(id); else selectedItems.delete(id); filterItems(); }
+function selectAllVisibleItems() { getVisibleItems().forEach(i=>selectedItems.add(i.id)); filterItems(); }
+function clearItemSelection() { selectedItems.clear(); filterItems(); }
+function deleteSelectedItems() {
+  if (!selectedItems.size) { showToast('Nothing selected'); return; }
+  if (!confirm('Delete ' + selectedItems.size + ' selected items?')) return;
+  STATE.items = STATE.items.filter(i => !selectedItems.has(i.id));
+  selectedItems.clear();
+  saveState();
+  showToast('Deleted selected items');
+  render();
+}
+function deleteAllItems() {
+  if (!confirm('Delete ALL items?')) return;
+  STATE.items = [];
+  selectedItems.clear();
+  saveState();
+  showToast('Deleted all items');
+  render();
+}
+function filterItems() {
+  const items = getVisibleItems();
+  const el=document.getElementById('items-list'); if(!el) return;
+  if(!items.length){el.innerHTML='<div class="empty"><div class="eico">📦</div><div class="etit">No items</div><div class="esub">Items auto-save when you add sales</div></div>';return;}
+  el.innerHTML='<div class="tw"><table class="dt"><thead><tr>' +
+    (itemsMassMode ? '<th style="width:34px"></th>' : '') +
+    '<th>Item</th><th>Category</th><th class="nr">Unit</th><th class="nr">Half Doz.</th><th class="nr">Case</th><th></th></tr></thead><tbody>' +
+    items.map(it => {
+      const tiers = calcTiers(it);
+      return '<tr' + (selectedItems.has(it.id) ? ' style="background:var(--as)"' : '') + '>' +
+        (itemsMassMode ? '<td><input type="checkbox" ' + (selectedItems.has(it.id) ? 'checked' : '') + ' onchange="toggleItemSelect(\'' + it.id + '\',this.checked)"></td>' : '') +
+        '<td style="font-weight:600;font-size:13px">' + it.name + '</td>' +
+        '<td><span class="tag">' + (it.category||'—') + '</span></td>' +
+        '<td class="nr" style="font-weight:700">' + (tiers.unit > 0 ? money(tiers.unit) : '<span style="color:var(--t3)">\u2014</span>') + '</td>' +
+        '<td class="nr" style="color:var(--half);font-weight:600">' + (tiers.halfDozen > 0 ? money(tiers.halfDozen)+'<div style="font-size:9px;color:var(--t3)">for 6</div>' : '<span style="color:var(--t3)">\u2014</span>') + '</td>' +
+        '<td class="nr" style="color:var(--case);font-weight:600">' + (tiers.casePrice > 0 ? money(tiers.casePrice)+'<div style="font-size:9px;color:var(--t3)">for 12</div>' : '<span style="color:var(--t3)">\u2014</span>') + '</td>' +
+        '<td><div style="display:flex;gap:4px">' +
+        '<button class="btn bic" style="width:28px;height:28px" onclick="openItemModal(\'' + it.id + '\')">' + IC.edit + '</button>' +
+        '<button class="btn bic" style="width:28px;height:28px;background:var(--errs);color:var(--err)" onclick="delItem(\'' + it.id + '\')">' + IC.trash + '</button>' +
+        '</div></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function openItemModal(id) { STATE.modal={type:'item',data:{id}}; render(); }
+function delItem(id) { if(confirm('Remove item?')){STATE.items=STATE.items.filter(i=>i.id!==id);saveState();showToast('Removed');render();} }
+function renderItemModal(id) {
+  const item = id ? STATE.items.find(i=>i.id===id) : null;
+  const tiers = item ? calcTiers(item) : {unit:0,halfDozen:0,casePrice:0};
+  const v = k => item ? (item[k] ?? '') : '';
+  return '<div class="mhan"></div><div class="mtit">' + (item?'Edit Item':'Add Item') + '</div><div class="fg">' +
+    '<div class="iw"><label class="il">Item Name *</label><input id="im-name" class="inp" value="' + v('name') + '" placeholder="e.g. Fresh Milk 1L"></div>' +
+    '<div class="iw"><label class="il">Category</label><input id="im-cat" class="inp" value="' + v('category') + '" placeholder="e.g. Dairy"></div>' +
+    '<div class="ptbox">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Price Tiers</div>' +
+      '<div class="iw" style="margin-bottom:10px"><label class="il">Unit Price (per single item — leave blank if only case pricing)</label><input id="im-unit" class="inp" type="number" step="0.01" value="' + (item && item.unitPrice > 0 ? item.unitPrice : '') + '" placeholder="Blank = no unit price" oninput="updateTiers()"></div>' +
+      '<div class="fr">' +
+        '<div class="iw"><label class="il" style="color:var(--half)">Half Case (6) — auto from Case÷2</label><input id="im-half" class="inp" type="number" step="0.01" value="' + (item && item.halfPrice > 0 ? item.halfPrice : '') + '" placeholder="Auto: Case ÷ 2" oninput="updateTiers()"></div>' +
+        '<div class="iw"><label class="il" style="color:var(--case)">Case Price (12) — from Lotus invoice</label><input id="im-case" class="inp" type="number" step="0.01" value="' + (item && item.casePrice > 0 ? item.casePrice : '') + '" placeholder="From Lotus invoice" oninput="autoFillHalf()"></div>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:10px;color:var(--t3)">Edit all three prices separately. Leave half/case blank if you want auto-fill from the unit price.</div>' +
+      '<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em">Preview</div>' +
+      '<div class="ptrow"><span class="ptlbl">Unit</span><span class="ptval" id="imt-unit">' + money(tiers.unit) + '</span></div>' +
+      '<div class="ptrow"><span class="ptlbl" style="color:var(--half)">Half Case</span><span class="ptval" style="color:var(--half)" id="imt-half">' + money(tiers.halfDozen) + '</span></div>' +
+      '<div class="ptrow"><span class="ptlbl" style="color:var(--case)">Case</span><span class="ptval" style="color:var(--case)" id="imt-case">' + money(tiers.casePrice) + '</span></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px"><button class="btn bs" style="flex:1;height:46px" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn bp" style="flex:2;height:46px" onclick="saveItem(\'' + (id||'') + '\')">' + (item?'Save Changes':'Add Item') + '</button></div></div>';
+}
+function autoFillHalf() {
+  const cv = parseFloat((document.getElementById('im-case')||{}).value)||0;
+  const hel = document.getElementById('im-half');
+  if (hel && !hel.value && cv > 0) hel.value = (cv/2).toFixed(2);
+  updateTiers();
+}
+function updateTiers() {
+  const uv = parseFloat((document.getElementById('im-unit')||{}).value)||0;
+  const hv = parseFloat((document.getElementById('im-half')||{}).value)||0;
+  const cv = parseFloat((document.getElementById('im-case')||{}).value)||0;
+  const eu=document.getElementById('imt-unit'),eh=document.getElementById('imt-half'),ec=document.getElementById('imt-case');
+  if(eu) eu.textContent = uv > 0 ? money(uv) : '\u2014';
+  if(eh) eh.textContent = hv > 0 ? money(hv) : (cv > 0 ? money(+(cv/2).toFixed(2)) : '\u2014');
+  if(ec) ec.textContent = cv > 0 ? money(cv) : '\u2014';
+}
+function saveItem(id) {
+  const v = i => (document.getElementById(i)||{}).value||'';
+  const name = v('im-name').trim(); if(!name){showToast('\u26A0\uFE0F Item name required');return;}
+  const cat = v('im-cat').trim();
+  const unit = parseFloat(v('im-unit')) || 0;
+  const casePrice = parseFloat(v('im-case')) || 0;
+  const halfRaw = v('im-half').trim();
+  // half: explicit value, or case/2 if case given, or 0 — NEVER auto from unit
+  const half = halfRaw !== '' ? (parseFloat(halfRaw) || 0) : (casePrice > 0 ? +(casePrice / 2).toFixed(2) : 0);
+  if(id) STATE.items=STATE.items.map(i=>i.id===id?{...i,name,category:cat,unitPrice:unit,halfPrice:half,casePrice:casePrice}:i);
+  else {
+    if(STATE.items.find(i=>i.name.toLowerCase()===name.toLowerCase())){showToast('⚠️ Already exists');return;}
+    STATE.items.push({id:uid(),name,category:cat,unitPrice:unit,halfPrice:half,casePrice:casePrice});
+  }
+  saveState(); showToast('✓ Saved'); closeModal();
+}
+
+// ── IMPORT/EXPORT ─────────────────────────────────────────────────────────────
+
+// ── LOTUS FIHAARA IMPORTER ─────────────────────────────────────────────────
+// Lotus invoice: Item#, Name, Attribute, Size, Qty (e.g "1 Case (12's)"), blank, Price, ExtPrice, Tax
+// IMPORTANT: "Price" = case price or half dozen price — NOT unit price
+// GST 8% is EXCLUSIVE (shown separately at bottom of Lotus invoice)
+function parseLotusText(text) {
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l&&/^\d{3,5}[,\t ]/.test(l));
+  return lines.map(line=>{
+    let parts = line.includes(',') ? line.split(',').map(s=>s.trim().replace(/^"|"$/g,'')) : line.split(/\t| {2,}/).map(s=>s.trim());
+    if (parts.length < 6) return null;
+    const itemNum=parts[0], itemName=(parts[1]||''), attribute=(parts[2]||''), size=(parts[3]||''), qtyStr=(parts[4]||'');
+    const priceStr=parts[parts.length-3]||parts[6]||'', extStr=parts[parts.length-2]||parts[7]||'';
+    const ql=qtyStr.toLowerCase();
+    let priceType='casePrice';
+    if(ql.includes('half')||ql.includes("6's")||ql.includes('half dozen')) priceType='halfDozen';
+    const qtyMatch=qtyStr.match(/^(\d+(?:\.\d+)?)/);
+    const qtyOrdered=qtyMatch?parseFloat(qtyMatch[1]):1;
+    const priceNum=parseFloat(priceStr.replace(/[^\d.]/g,''))||0;
+    const extNum=parseFloat(extStr.replace(/[^\d.]/g,''))||0;
+    const fullName=(itemName+(attribute?' '+attribute:'')).trim();
+    if(!fullName||!priceNum) return null;
+    return{itemNum,itemName:fullName,size,qtyStr,qtyOrdered,priceType,priceNum,extNum};
+  }).filter(Boolean);
+}
+function parseLotusFile(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{const ta=document.getElementById('lotus-paste');if(ta)ta.value=ev.target.result||'';showToast('\u2713 File loaded \u2014 tap Preview');};
+  reader.readAsText(file);
+}
+function previewLotus(){
+  const text=(document.getElementById('lotus-paste')||{}).value||'';
+  const shopName=(document.getElementById('lotus-shop')||{}).value||'';
+  const area=(document.getElementById('lotus-area')||{}).value||'';
+  const date=(document.getElementById('lotus-date')||{}).value||new Date().toISOString().split('T')[0];
+  const invId=(document.getElementById('lotus-invid')||{}).value||'';
+  if(!text.trim()){showToast('\u26A0\uFE0F Paste rows first');return;}
+  if(!shopName){showToast('\u26A0\uFE0F Enter shop name (Bill To)');return;}
+  const rows=parseLotusText(text);
+  if(!rows.length){showToast('\u26A0\uFE0F No valid rows. Rows should start with item numbers e.g. 2001, 2002');return;}
+  const sub=rows.reduce((a,r)=>a+(r.extNum||+(r.priceNum*r.qtyOrdered).toFixed(2)),0);
+  const gst=+(sub*0.08).toFixed(2),tot=+(sub+gst).toFixed(2);
+  const prev=document.getElementById('lotus-preview');if(!prev)return;
+  prev.innerHTML='<div style="margin-top:14px">'+
+  '<div style="font-size:12px;font-weight:700;color:var(--lotus);margin-bottom:8px;text-transform:uppercase">'+rows.length+' line items found:</div>'+
+  '<div class="tw"><table class="dt"><thead><tr><th>#</th><th>Item</th><th>Pack Type</th><th class="nr">Qty</th><th class="nr">Pack Price</th><th class="nr">Ext Price</th></tr></thead><tbody>'+
+  rows.map(r=>'<tr><td style="font-size:10px;color:var(--t3)">'+r.itemNum+'</td>'+
+  '<td><div style="font-weight:600;font-size:12px">'+r.itemName+'</div><div style="font-size:10px;color:var(--t3)">'+r.size+'</div></td>'+
+  '<td><span class="badge '+(r.priceType==='casePrice'?'bcase':'bhalf')+'">'+tierLabel(r.priceType)+'</span></td>'+
+  '<td class="nr">'+r.qtyOrdered+'</td><td class="nr">'+money(r.priceNum)+'</td>'+
+  '<td class="nr" style="font-weight:700">'+money(r.extNum||+(r.priceNum*r.qtyOrdered).toFixed(2))+'</td></tr>').join('')+
+  '</tbody></table></div>'+
+  '<div style="background:var(--s2);border-radius:var(--rs);padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:5px">'+
+  '<div class="gstrow"><span style="color:var(--t2)">Subtotal (ex-GST)</span><span>'+money(sub)+'</span></div>'+
+  '<div class="gstrow"><span style="color:var(--gst)">GST 8%</span><span>'+money(gst)+'</span></div>'+
+  '<div style="height:1px;background:var(--b)"></div>'+
+  '<div class="gstrow" style="font-weight:800;font-size:15px"><span>Receipt Total</span><span style="color:var(--lotus)">'+money(tot)+'</span></div></div>'+
+  '<button class="btn bsuc bw" style="margin-top:12px;height:48px;font-size:15px" onclick="doImportLotus()">\u2713 Import '+rows.length+' Items from Lotus</button></div>';
+  window.lotusPendingRows=rows;
+  window.lotusPendingMeta={shopName,area,date,invId,status:(document.getElementById('lotus-status')||{}).value||'Pending'};
+}
+function doImportLotus(){
+  const rows=window.lotusPendingRows,meta=window.lotusPendingMeta;
+  if(!rows||!rows.length||!meta){showToast('\u26A0\uFE0F Run Preview first');return;}
+  let imported=0,skipped=0;
+  rows.forEach(r=>{
+    const ext=r.extNum||+(r.priceNum*r.qtyOrdered).toFixed(2);
+    const gst=+(ext*0.08).toFixed(2),finalTotal=+(ext+gst).toFixed(2);
+    const sale={id:uid(),date:meta.date,shopName:meta.shopName,area:meta.area,invoiceId:meta.invId,
+      itemName:r.itemName,category:'',priceType:r.priceType,quantity:r.qtyOrdered,
+      unitPrice:r.priceNum,lineTotal:ext,gstInclusive:false,gstRate:GST_RATE,
+      gstAmt:gst,finalTotal,currency:STATE.currency||'MVR',paymentStatus:meta.status,notes:'Lotus import'};
+    const dup=STATE.sales.find(s=>s.date===meta.date&&s.shopName===meta.shopName&&s.invoiceId===meta.invId&&s.itemName===r.itemName&&s.quantity===r.qtyOrdered);
+    if(dup){skipped++;return;}
+    STATE.sales.push(sale);
+    const ex=STATE.items.find(i=>i.name.toLowerCase()===r.itemName.toLowerCase());
+    if(ex){if(r.priceType==='casePrice'){ex.casePrice=r.priceNum;if(!ex.halfPrice)ex.halfPrice=+(r.priceNum/2).toFixed(2);}else if(r.priceType==='halfDozen')ex.halfPrice=r.priceNum;}
+    else{const ni={id:uid(),name:r.itemName,category:'',unitPrice:0,halfPrice:0,casePrice:0};if(r.priceType==='casePrice'){ni.casePrice=r.priceNum;ni.halfPrice=+(r.priceNum/2).toFixed(2);}else if(r.priceType==='halfDozen')ni.halfPrice=r.priceNum;STATE.items.push(ni);}
+    if(!STATE.shops.find(s=>s.name.toLowerCase()===meta.shopName.toLowerCase()))
+      STATE.shops.push({id:uid(),name:meta.shopName,area:meta.area,owner:'',contact:'',type:'',priority:'Medium',notes:'',lastVisit:meta.date});
+    imported++;
+  });
+  saveState();window.lotusPendingRows=null;window.lotusPendingMeta=null;
+  const p=document.getElementById('lotus-preview');if(p)p.innerHTML='';
+  const ta=document.getElementById('lotus-paste');if(ta)ta.value='';
+  showToast('\u2713 Imported '+imported+' Lotus rows'+(skipped?' ('+skipped+' skipped)':'')+'!');render();
+}
+function renderImportExport() {
+  return '<div class="fu"><div style="margin-bottom:18px"><h1 style="font-size:22px;font-weight:800">Import / Export</h1></div>' +
+    '<div class="card" style="margin-bottom:14px;border:1.5px solid var(--lotus)">' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+    '<div style="font-size:24px">\uD83C\uDF3F</div>' +
+    '<div><div style="font-family:Outfit,sans-serif;font-size:16px;font-weight:800;color:var(--lotus)">Lotus Fihaara Import</div>' +
+    '<div style="font-size:12px;color:var(--t2)">Import directly from Lotus quotation CSV/text</div></div></div>' +
+    '<div style="background:var(--lotuss,rgba(22,163,74,.12));border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--lotus);margin-bottom:12px;line-height:1.6">' +
+    '\u26a0\ufe0f <strong>The Price column in Lotus = case price or half dozen price, NOT unit price.</strong> This importer handles that correctly.</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px">' +
+    '<label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:2px dashed rgba(22,163,74,.5);border-radius:var(--rs);cursor:pointer">' +
+    '\uD83C\uDF3F <div><div style="font-weight:600;font-size:14px">Upload Lotus CSV / text file</div><div style="font-size:11px;color:var(--t2)">.csv or .txt</div></div>' +
+    '<input type="file" accept=".csv,.txt" style="display:none" onchange="parseLotusFile(this)"></label>' +
+    '<div class="iw"><label class="il">Or paste Lotus invoice rows</label>' +
+    '<textarea id="lotus-paste" class="inp" style="min-height:80px;font-size:12px;font-family:monospace" placeholder="2001,Antabax Shower Cream 250ml,Fresh,250ml,1 Case (12\'s),,Rf449.07,Rf449.07,T"></textarea></div>' +
+    '<div class="iw"><label class="il">Shop Name (Bill To) *</label><input id="lotus-shop" class="inp" placeholder="e.g. On The Way 1"></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Area</label><input id="lotus-area" class="inp" placeholder="e.g. Firaavaru"></div>' +
+    '<div class="iw"><label class="il">Invoice Date</label><input id="lotus-date" class="inp" type="date" value="' + new Date().toISOString().split('T')[0] + '"></div></div>' +
+    '<div class="fr"><div class="iw"><label class="il">Invoice / Ref #</label><input id="lotus-invid" class="inp" placeholder="e.g. LFF/HELD"></div>' +
+    '<div class="iw"><label class="il">Payment Status</label><select id="lotus-status" class="inp"><option>Pending</option><option>Paid</option></select></div></div>' +
+    '<button style="background:rgba(22,163,74,.15);color:#16A34A;border:1.5px solid #16A34A;border-radius:var(--rs);padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;width:100%;height:46px" onclick="previewLotus()">\uD83D\uDD0D Preview Lotus Import</button>' +
+    '</div><div id="lotus-preview"></div></div>' +
+    '<div class="card" style="margin-bottom:14px"><div class="aline"></div><div class="st" style="margin-bottom:12px">Export Data</div>' +
+    [['Sales History',STATE.sales.length,'sales'],['Items Catalog',STATE.items.length,'items'],['Shops List',STATE.shops.length,'shops']].map(([l,n,k]) =>
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--b)">' +
+      '<div><div style="font-weight:500;font-size:14px">' + l + '</div><div style="font-size:11px;color:var(--t2)">' + n + ' records</div></div>' +
+      '<button class="btn bs" style="padding:8px 12px;font-size:12px" onclick="exportCSV(\'' + k + '\')">' + IC.dl + ' CSV</button></div>'
+    ).join('') +
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">' +
+    '<div><div style="font-weight:500;font-size:14px">Full Backup</div><div style="font-size:11px;color:var(--t2)">All data as JSON</div></div>' +
+    '<button class="btn bs" style="padding:8px 12px;font-size:12px" onclick="exportBackup()">' + IC.dl + ' JSON</button></div></div>' +
+    '<div class="card" style="margin-bottom:14px"><div class="aline"></div><div class="st" style="margin-bottom:6px">Import Sales from CSV</div>' +
+    '<div style="font-size:12px;color:var(--t2);margin-bottom:12px">Columns: date, shopName, area, invoiceId, itemName, category, priceMode, packSize, quantity, unitPrice, halfPrice, casePrice, lineTotal, finalTotal, gstInclusive, currency, paymentStatus, notes</div>' +
+    '<label style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--s2);border:2px dashed var(--b);border-radius:var(--rs);cursor:pointer">' +
+    IC.ul + '<div><div style="font-weight:600;font-size:14px">Tap to select CSV file</div><div style="font-size:11px;color:var(--t2)">Supports .csv files</div></div>' +
+    '<input type="file" accept=".csv" style="display:none" onchange="previewCSV(this)"></label>' +
+    '<div id="csv-preview"></div></div>' +
+    '<div class="card"><div class="aline"></div><div class="st" style="margin-bottom:6px">Restore from Backup</div>' +
+    '<label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:2px dashed var(--b);border-radius:var(--rs);cursor:pointer">' +
+    IC.ul + '<div><div style="font-weight:600;font-size:14px">Select backup JSON file</div></div>' +
+    '<input type="file" accept=".json" style="display:none" onchange="restoreBackup(this)"></label></div></div>';
+}
+function exportCSV(key) {
+  const data = STATE[key]; if(!data||!data.length){showToast('No data');return;}
+  const ks=Object.keys(data[0]);
+  const csv=[ks.join(','),...data.map(r=>ks.map(k=>'"'+(String(r[k]||'').replace(/"/g,'""'))+'"').join(','))].join('\n');
+  dlFile(csv,'h2line-'+key+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
+  showToast('\u2713 Downloaded');
+}
+function exportBackup() {
+  dlFile(JSON.stringify({sales:STATE.sales,items:STATE.items,shops:STATE.shops,exportedAt:new Date().toISOString(),version:'3.0'},null,2),'h2line-backup-'+new Date().toISOString().split('T')[0]+'.json','application/json');
+  showToast('\u2713 Backup downloaded');
+}
+function dlFile(content, name, type) {
+  const b=new Blob([content],{type}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+
+function parseCSVText(text) {
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cell += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        cell += ch;
+      }
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); if (row.some(v => String(v).trim() !== '')) rows.push(row); row = []; cell = ''; }
+      else if (ch !== '\r') cell += ch;
+    }
+  }
+  row.push(cell);
+  if (row.some(v => String(v).trim() !== '')) rows.push(row);
+  return rows;
+}
+function normalizeCSVRow(row) {
+  const out = {};
+  Object.keys(row || {}).forEach(k => {
+    const nk = String(k).trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+    out[nk] = row[k];
+  });
+  return out;
+}
+function previewCSV(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const csvRows = parseCSVText(ev.target.result || '');
+    if (!csvRows.length) { showToast('⚠️ Empty CSV'); return; }
+    const headers = csvRows[0].map(h => String(h).trim());
+    const allRows = csvRows.slice(1).map(vals => headers.reduce((o,h,i)=>{ o[h]=vals[i]||''; return o; }, {})).filter(r=>Object.values(r).some(v=>String(v).trim()!==''));
+    const preview=allRows.slice(0,5);
+    const prev=document.getElementById('csv-preview'); if(!prev) return;
+    prev.innerHTML='<div style="margin-top:12px;font-size:12px;font-weight:600;margin-bottom:8px;color:var(--t2)">Preview (' + allRows.length + ' rows ready to import):</div>' +
+      '<div class="tw"><table class="dt"><thead><tr>' + headers.map(h=>'<th>'+h+'</th>').join('') + '</tr></thead><tbody>' +
+      preview.map(r=>'<tr>'+headers.map(h=>'<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r[h]||'')+'</td>').join('')+'</tr>').join('') +
+      '</tbody></table></div>' +
+      (allRows.length>5?'<div style="font-size:11px;color:var(--t2);padding:6px 0">...and '+(allRows.length-5)+' more rows</div>':'') +
+      '<button class="btn bsuc bw" style="margin-top:10px;height:48px;font-size:15px" onclick="doImportCSV(csvPendingRows)">✓ Import ' + allRows.length + ' Rows Now</button>';
+    window.csvPendingRows = allRows;
+  };
+  reader.readAsText(file);
+}
+function doImportCSV(rows) {
+  if(!rows||!rows.length){showToast('⚠️ No rows to import');return;}
+  let imported=0, skipped=0;
+  rows.forEach(raw=>{
+    const r = normalizeCSVRow(raw);
+    const date = String(r.date || r.datetime || '').trim();
+    const shopName = String(r.shopname || r.shop || r.shoptitle || '').trim();
+    const area = String(r.area || '').trim();
+    const invoiceId = String(r.invoiceid || r.invoice || r.billid || '').trim();
+    const itemName = String(r.itemname || r.item || r.product || '').trim();
+    const category = String(r.category || '').trim();
+    const priceType = String(r.pricemode || r.saletype || r.pricetype || 'unit').trim();
+    const packSize = parseFloat(r.packsize || r.unitspersaletype || r.packcount || (priceType === 'case' ? 12 : priceType === 'halfDozen' ? 6 : 1)) || 1;
+    const qty = parseFloat(r.quantity || r.qty || 1) || 1;
+    const currency = String(r.currency || STATE.currency || 'MVR').trim().toUpperCase();
+    const gstInc = String(r.gstinclusive || r.gstincl || 'true').toLowerCase() === 'true';
+    const status = String(r.paymentstatus || r.status || 'Paid').trim();
+    const notes = String(r.notes || '').trim();
+
+    const halfPrice = parseFloat(r.halfprice || r.halfcaseprice || r.halfpriceeach || 0) || 0;
+    const casePrice = parseFloat(r.caseprice || r.casepriceeach || 0) || 0;
+    const unitPriceRaw = parseFloat(
+      r.unitprice ||
+      r.price ||
+      r.packprice ||
+      r.saleprice ||
+      (priceType === 'case' ? casePrice : 0) ||
+      (priceType === 'halfDozen' ? halfPrice : 0) ||
+      0
+    ) || 0;
+    const lineTotalRaw = parseFloat(r.linetotal || r.rowtotal || 0) || 0;
+    const finalTotalRaw = parseFloat(r.finaltotal || r.total || 0) || 0;
+
+    if(!shopName || !itemName || !date){ skipped++; return; }
+
+    let lineTotal = lineTotalRaw;
+    let finalTotal = finalTotalRaw;
+
+    if (!lineTotal && finalTotal) {
+      lineTotal = gstInc ? +(finalTotal / 1.08).toFixed(2) : finalTotal;
+    }
+    if (!finalTotal && lineTotal) {
+      finalTotal = gstInc ? +(lineTotal * 1.08).toFixed(2) : lineTotal;
+    }
+    if (!lineTotal && unitPriceRaw && qty) {
+      lineTotal = +(unitPriceRaw * qty).toFixed(2);
+      if (!finalTotal) finalTotal = gstInc ? +(lineTotal * 1.08).toFixed(2) : lineTotal;
+    }
+    if (!unitPriceRaw && qty) {
+      // if the CSV gave a row total, store the per-pack display price as row total / qty
+      // this keeps import seamless even for case/half-dozen bundles
+    }
+
+    const gstAmt = +(finalTotal - lineTotal).toFixed(2);
+    const sale = {
+      id: uid(), date, shopName, area, invoiceId, itemName, category,
+      priceType, packSize, quantity: qty, unitPrice: unitPriceRaw || lineTotal,
+      halfPrice, casePrice, lineTotal, gstInclusive: gstInc, gstRate: GST_RATE,
+      gstAmt, finalTotal, currency, paymentStatus: status, notes
+    };
+
+    const dup = STATE.sales.find(s => s.date===date && s.shopName===shopName && s.invoiceId===invoiceId && s.itemName===itemName && s.quantity===qty && s.finalTotal===sale.finalTotal);
+    if(dup){ skipped++; return; }
+
+    STATE.sales.push(sale);
+
+    const existing = STATE.items.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+    if (existing) {
+      if (unitPriceRaw) existing.unitPrice = unitPriceRaw;
+      if (halfPrice) existing.halfPrice = halfPrice;
+      if (casePrice) existing.casePrice = casePrice;
+      if (category && !existing.category) existing.category = category;
+    } else {
+      const baseUnit = unitPriceRaw || 0;
+      const tiers = calcTiers({unitPrice: baseUnit, halfPrice: halfPrice || undefined, casePrice: casePrice || undefined});
+      STATE.items.push({id:uid(), name:itemName, category, unitPrice:tiers.unit, halfPrice:tiers.halfDozen, casePrice:tiers.casePrice});
+    }
+
+    if(!STATE.shops.find(s => s.name.toLowerCase() === shopName.toLowerCase()))
+      STATE.shops.push({id:uid(), name:shopName, area, owner:'', contact:'', priority:'Medium', notes:'', lastVisit:date});
+
+    imported++;
+  });
+  saveState();
+  window.csvPendingRows = null;
+  const cp = document.getElementById('csv-preview'); if(cp) cp.innerHTML='';
+  showToast('✓ Imported ' + imported + ' rows' + (skipped ? ' (' + skipped + ' skipped)' : '') + '!');
+  render();
+}
+function restoreBackup(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const bk=JSON.parse(ev.target.result);
+      if(!confirm('Restore backup from '+bk.exportedAt+'? This will overwrite current data.')) return;
+      if(bk.sales) STATE.sales=bk.sales; if(bk.items) STATE.items=bk.items; if(bk.shops) STATE.shops=bk.shops;
+      saveState(); showToast('\u2713 Backup restored!'); render();
+    } catch { showToast('\u26A0\uFE0F Invalid backup file'); }
+  };
+  reader.readAsText(file);
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+
+function renderSettings() {
+  return '<div class="fu"><div style="margin-bottom:18px"><h1 style="font-size:22px;font-weight:800">Settings</h1></div>' +
+    '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:14px">' +
+    '<div style="width:52px;height:52px;border-radius:16px;background:var(--as);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:Outfit,sans-serif;font-weight:800;color:var(--a)">' + (STATE.user?.name||'U')[0].toUpperCase() + '</div>' +
+    '<div><div style="font-family:Outfit,sans-serif;font-weight:700;font-size:17px">' + (STATE.user?.name||'User') + '</div>' +
+    '<div style="font-size:12px;color:var(--t2)">' + (STATE.user?.email||'—') + '</div></div></div></div>' +
+    '<div class="card" style="margin-bottom:12px"><div class="st" style="margin-bottom:14px">Appearance</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:500">Theme</div><div style="font-size:11px;color:var(--t2)">' + (STATE.dark?'Dark':'Light') + ' mode</div></div>' +
+    '<div style="display:flex;gap:6px"><button class="chip' + (!STATE.dark?' on':'') + '" onclick="setTheme(false)">' + IC.sun + ' Light</button><button class="chip' + (STATE.dark?' on':'') + '" onclick="setTheme(true)">' + IC.moon + ' Dark</button></div></div></div>' +
+    '<div class="card" style="margin-bottom:12px"><div class="st" style="margin-bottom:12px">Business Settings</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b)"><div style="font-size:13px;font-weight:500">GST Rate</div><div style="font-size:12px;color:var(--t2)">8% (fixed)</div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b)"><div style="font-size:13px;font-weight:500">Business Week</div><div style="font-size:12px;color:var(--t2)">Saturday – Thursday</div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b)"><div style="font-size:13px;font-weight:500">Price Tiers</div><div style="font-size:12px;color:var(--t2)">Unit / Half Dozen / Case</div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b)"><div style="font-size:13px;font-weight:500">GST Mode</div><div style="font-size:12px;color:var(--t2)">Inclusive or Exclusive per entry</div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0"><div style="font-size:13px;font-weight:500">Currency</div>' +
+      '<div style="display:flex;gap:8px;align-items:center"><input id="currency-code" class="inp" style="width:110px;height:34px;font-size:12px;padding:0 10px" value="' + (STATE.currency||'MVR') + '" placeholder="MVR" maxlength="8" oninput="this.value=this.value.toUpperCase()"><button class="btn bs" style="padding:7px 10px;font-size:12px" onclick="setCurrency((document.getElementById(\'currency-code\')||{}).value||\'MVR\')">Save</button></div></div>' +
+    '<div style="font-size:11px;color:var(--t3);margin-top:8px">Use any ISO currency code. MVR is supported by default.</div>' +
+    '</div>' +
+    '<div class="card" style="margin-bottom:12px"><div class="st" style="margin-bottom:10px">iPhone / PWA Install</div>' +
+    '<div style="background:var(--as);border-radius:var(--rs);padding:12px 13px;font-size:13px;color:var(--t2);line-height:1.6">' +
+    '<div style="font-weight:700;color:var(--a);margin-bottom:6px">📱 Add to Home Screen</div>' +
+    '<div>In Safari: tap the <strong>Share button</strong> (□↑) then <strong>"Add to Home Screen"</strong>. Opens fullscreen like a native app.</div></div></div>' +
+    '<div class="card" style="margin-bottom:16px"><div class="st" style="margin-bottom:10px">About</div>' +
+    '<div style="font-size:12px;color:var(--t2);line-height:1.7">' +
+    '<div><strong style="color:var(--t)">H2 Line</strong> · v3.0</div>' +
+    '<div>Built for distribution businesses. GST @ 8%, price tiers, weekly reports, invoice tracking, sharing.</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:var(--t3)">© 2024 H2 Line · Data stored locally on your device.</div></div></div>' +
+    '<button class="btn bd bw" style="height:48px" onclick="logout()">Sign Out</button></div>';
+}
+function setTheme(dark) { STATE.dark=dark; saveState(); render(); }
+function logout() { if(confirm('Sign out?')){db.set('user',null);STATE.user=null;render();} }
+
+// ── SHARE SYSTEM ──────────────────────────────────────────────────────────────
+let syncTimer = null;
+function autoSync() {
+  if(!SHARE.enabled||!SHARE.shareId) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    const ok = await pushShare(SHARE.shareId, SHARE.perms);
+    if(ok) { SHARE.lastPushed=new Date().toISOString(); db.set('shareState',SHARE); }
+  }, 3000);
+}
+async function pushShare(shareId, perms) {
+  const payload = {
+    meta:{ownerName:STATE.user?.name||'H2 Line',updatedAt:new Date().toISOString()},
+    perms, sales:perms.sales?STATE.sales:[], items:perms.items?STATE.items:[], shops:perms.shops?STATE.shops:[]
+  };
+  try {
+    const res = await fetch(FIREBASE_URL+'/shares/'+shareId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    return res.ok;
+  } catch { return false; }
+}
+async function deleteShare(shareId) {
+  try { await fetch(FIREBASE_URL+'/shares/'+shareId+'.json',{method:'DELETE'}); } catch {}
+}
+function openShareModal() { STATE.modal={type:'share'}; render(); }
+function renderShareModal() {
+  const p=SHARE.perms;
+  const link=SHARE.shareId?(window.location.origin+window.location.pathname+'?view='+SHARE.shareId):null;
+  const permItems=[
+    {key:'dashboard',label:'Dashboard & KPIs',ico:'\uD83D\uDCCA',desc:'Totals, charts, top shops/items'},
+    {key:'sales',label:'Sales History',ico:'\uD83D\uDCB0',desc:'All sales entries with amounts'},
+    {key:'invoices',label:'Invoices',ico:'\uD83E\uDDFE',desc:'Invoice breakdown & GST'},
+    {key:'report',label:'Weekly Reports',ico:'\uD83D\uDCC5',desc:'Sat\u2013Thu weekly summaries'},
+    {key:'shops',label:'Shop Details',ico:'\uD83C\uDFAA',desc:'Shop names, contacts, areas'},
+    {key:'items',label:'Product Catalog',ico:'\uD83D\uDCE6',desc:'Items and pricing tiers'},
+  ];
+  return '<div class="mhan"></div>' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:22px">\uD83D\uDD17</div><div class="mtit" style="margin-bottom:0">Share H2 Line</div></div>' +
+    '<div style="font-size:13px;color:var(--t2);margin-bottom:20px">Generate a live view-only link. Viewers can see your data but cannot edit anything.</div>' +
+    '<div style="background:' + (SHARE.enabled?'var(--as)':'var(--s2)') + ';border:1.5px solid ' + (SHARE.enabled?'var(--a)':'var(--b)') + ';border-radius:var(--rm);padding:14px;margin-bottom:16px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-weight:700;font-size:15px">Live Sharing</div><div style="font-size:12px;color:var(--t2)">Anyone with the link can view</div></div>' +
+    '<label class="share-tog" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ' + (SHARE.enabled?'checked':'') + ' onchange="toggleShare(this.checked)"></label></div>' +
+    (SHARE.enabled&&link?'<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Your Share Link</div>' +
+    '<div class="slink" onclick="copyLink(\'' + link + '\')">' + link + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:8px">' +
+    '<button class="btn bp" style="flex:1;padding:9px;font-size:13px" onclick="copyLink(\'' + link + '\')">\uD83D\uDCCB Copy</button>' +
+    '<button class="btn bs" style="flex:1;padding:9px;font-size:13px" onclick="shareLink(\'' + link + '\')">\uD83D\uDCE4 Share</button>' +
+    '<button class="btn bs" style="padding:9px 12px;font-size:13px" onclick="syncNow()">\uD83D\uDD04 Sync</button></div>' +
+    (SHARE.lastPushed?'<div style="font-size:10px;color:var(--t3);margin-top:6px;text-align:center">Last synced: '+new Date(SHARE.lastPushed).toLocaleString('en-IN')+'</div>':'') +
+    '</div>':'') + '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">What viewers can see</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">' +
+    permItems.map(item => '<div style="display:flex;align-items:center;gap:10px;background:var(--s2);border-radius:var(--rs);padding:11px 13px">' +
+      '<div style="font-size:18px;width:28px;text-align:center">' + item.ico + '</div>' +
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + item.label + '</div><div style="font-size:11px;color:var(--t2)">' + item.desc + '</div></div>' +
+      '<label class="share-tog" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ' + (p[item.key]?'checked':'') + ' onchange="updatePerm(\'' + item.key + '\',this.checked)"></label></div>'
+    ).join('') + '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">One-time Snapshot</div>' +
+    '<div style="background:var(--s2);border-radius:var(--rm);padding:14px;margin-bottom:20px">' +
+    '<div style="font-size:13px;color:var(--t2);margin-bottom:12px">Export a self-contained HTML file anyone can open offline.</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    '<button class="btn bs bw" style="height:42px;font-size:13px" onclick="exportSnap(\'full\')">\uD83D\uDCC4 Full Snapshot</button>' +
+    '<button class="btn bs bw" style="height:42px;font-size:13px" onclick="exportSnap(\'dashboard\')">\uD83D\uDCCA Dashboard Only</button>' +
+    '<button class="btn bs bw" style="height:42px;font-size:13px" onclick="exportSnap(\'report\')">\uD83D\uDCC5 Weekly Report</button>' +
+    '</div></div>' +
+    '<button class="btn bg2 bw" style="height:44px" onclick="closeModal()">Close</button>';
+}
+async function toggleShare(enabled) {
+  SHARE.enabled = enabled;
+  if(enabled&&!SHARE.shareId) SHARE.shareId=uid();
+  if(!enabled&&SHARE.shareId) {
+    if(confirm('Disable sharing? The current link will stop working.')) { await deleteShare(SHARE.shareId); SHARE.shareId=null; SHARE.lastPushed=null; }
+    else { SHARE.enabled=true; }
+  }
+  db.set('shareState',SHARE);
+  if(SHARE.enabled) {
+    const ok=await pushShare(SHARE.shareId,SHARE.perms);
+    if(ok){SHARE.lastPushed=new Date().toISOString();db.set('shareState',SHARE);showToast('\u2713 Live link active!');}
+    else showToast('\u26A0\uFE0F Setup Firebase to enable live links');
+  }
+  STATE.modal={type:'share'}; render();
+}
+function updatePerm(key,val) {
+  SHARE.perms[key]=val; db.set('shareState',SHARE);
+  if(SHARE.enabled&&SHARE.shareId) pushShare(SHARE.shareId,SHARE.perms).then(ok=>{if(ok){SHARE.lastPushed=new Date().toISOString();db.set('shareState',SHARE);showToast('\u2713 Updated');}});
+}
+async function syncNow() {
+  showToast('Syncing\u2026');
+  const ok=await pushShare(SHARE.shareId,SHARE.perms);
+  if(ok){SHARE.lastPushed=new Date().toISOString();db.set('shareState',SHARE);showToast('\u2713 Synced!');STATE.modal={type:'share'};render();}
+  else showToast('\u26A0\uFE0F Sync failed');
+}
+function copyLink(link) {
+  if(navigator.clipboard) navigator.clipboard.writeText(link).then(()=>showToast('\u2713 Link copied!'));
+  else { const t=document.createElement('textarea');t.value=link;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();showToast('\u2713 Copied!'); }
+}
+function shareLink(link) {
+  if(navigator.share) navigator.share({title:'H2 Line \u2014 Live View',text:'View my H2 Line sales',url:link});
+  else copyLink(link);
+}
+function exportSnap(mode) {
+  const S=STATE.sales, mn=money;
+  const tot=S.reduce((a,r)=>a+r.finalTotal,0), pd=S.filter(r=>r.paymentStatus==='Paid').reduce((a,r)=>a+r.finalTotal,0);
+  const pe=S.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+r.finalTotal,0), gt=S.reduce((a,r)=>a+(r.gstAmt||0),0);
+  const wmap={};S.forEach(s=>{const w=weekStart(s.date);wmap[w]=(wmap[w]||0)+s.finalTotal;});
+  const wdata=Object.keys(wmap).sort().slice(-8).map(w=>({label:weekLabel(w),total:wmap[w]}));
+  const smap={};S.forEach(r=>{smap[r.shopName]=(smap[r.shopName]||0)+r.finalTotal;});
+  const topS=Object.entries(smap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const imap={};S.forEach(r=>{imap[r.itemName]=(imap[r.itemName]||0)+r.finalTotal;});
+  const topI=Object.entries(imap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const now=new Date().toLocaleString('en-IN');
+  const salesTbl=(mode==='full')&&SHARE.perms.sales?'<section><h2>Sales History</h2><table><thead><tr><th>Date</th><th>Shop</th><th>Item</th><th>Type</th><th>GST</th><th>Total</th><th>Status</th></tr></thead><tbody>'+S.slice(-100).map(s=>'<tr><td>'+s.date+'</td><td>'+s.shopName+'</td><td>'+s.itemName+'</td><td>'+s.priceType+'</td><td>'+mn(s.gstAmt)+' '+(s.gstInclusive?'(incl.)':'(+8%)')+'</td><td><b>'+mn(s.finalTotal)+'</b></td><td>'+s.paymentStatus+'</td></tr>').join('')+'</tbody></table></section>':'';
+  const weekTbl=(mode==='full'||mode==='report')?'<section><h2>Weekly Report</h2><table><thead><tr><th>Week</th><th>Total</th></tr></thead><tbody>'+wdata.map(w=>'<tr><td>'+w.label+'</td><td><b>'+mn(w.total)+'</b></td></tr>').join('')+'</tbody></table></section>':'';
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>H2 Line Snapshot</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Nunito:wght@400;500;600&display=swap"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'Nunito\',sans-serif;background:#0A0A0F;color:#F0F0FF;padding:20px;max-width:900px;margin:0 auto}.logo{font-family:\'Outfit\',sans-serif;font-size:26px;font-weight:800;color:#6366F1}.hdr{display:flex;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}.meta{font-size:12px;color:#8888AA;text-align:right}.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}.kcard{background:#141420;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px}.klbl{font-size:10px;font-weight:700;color:#555570;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.kval{font-family:\'Outfit\',sans-serif;font-size:20px;font-weight:800}section{margin-bottom:28px}h2{font-family:\'Outfit\',sans-serif;font-size:16px;font-weight:700;margin-bottom:12px}table{width:100%;border-collapse:collapse;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden}th{background:#1C1C2C;color:#8888AA;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;text-align:left}td{padding:10px 12px;border-top:1px solid rgba(255,255,255,.05);font-size:13px}.tops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}.tc{background:#141420;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px}.note{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 14px;font-size:12px;color:#F59E0B;margin-bottom:20px}@media(max-width:600px){.kgrid{grid-template-columns:1fr 1fr}.tops{grid-template-columns:1fr}}</style></head><body>' +
+    '<div class="hdr"><div><div class="logo">H2 Line</div><div style="font-size:12px;color:#8888AA;margin-top:3px">View-only snapshot by '+(STATE.user?.name||'H2 Line')+'</div></div><div class="meta"><div>Generated: '+now+'</div><div>\uD83D\uDD12 Read-only</div></div></div>' +
+    '<div class="note">\uD83D\uDC41 Read-only snapshot as of '+now+'.</div>' +
+    '<div class="kgrid"><div class="kcard"><div class="klbl">Total Sales</div><div class="kval" style="color:#6366F1">'+mn(tot)+'</div></div><div class="kcard"><div class="klbl">Collected</div><div class="kval" style="color:#10B981">'+mn(pd)+'</div></div><div class="kcard"><div class="klbl">Pending</div><div class="kval" style="color:#F59E0B">'+mn(pe)+'</div></div><div class="kcard"><div class="klbl">GST @ 8%</div><div class="kval" style="color:#8B5CF6">'+mn(gt)+'</div></div></div>' +
+    '<div class="tops"><div class="tc"><h2 style="font-size:14px;margin-bottom:10px">Top Shops</h2>'+topS.map(([n,t],i)=>'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px"><span><span style="color:#6366F1;margin-right:6px">'+(i+1)+'.</span>'+n+'</span><b>'+mn(t)+'</b></div>').join('')+'</div>' +
+    '<div class="tc"><h2 style="font-size:14px;margin-bottom:10px">Top Items</h2>'+topI.map(([n,t],i)=>'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px"><span><span style="color:#6366F1;margin-right:6px">'+(i+1)+'.</span>'+n+'</span><b>'+mn(t)+'</b></div>').join('')+'</div></div>' +
+    weekTbl + salesTbl + '</body></html>';
+  dlFile(html,'h2line-snapshot-'+new Date().toISOString().split('T')[0]+'.html','text/html');
+  showToast('\u2713 Snapshot exported!');
+}
+
+// ── VIEWER MODE ───────────────────────────────────────────────────────────────
+async function bootViewer() {
+  const root = document.getElementById('app');
+  document.body.className = STATE.dark ? 'dark' : 'light';
+  root.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px"><div style="font-family:Outfit,sans-serif;font-size:28px;font-weight:800;color:var(--a)">H2 Line</div><div style="font-size:13px;color:var(--t2)">Loading shared view\u2026</div><div style="width:32px;height:32px;border:3px solid var(--as);border-top-color:var(--a);border-radius:50%;animation:spin 1s linear infinite"></div></div>';
+  try {
+    const res = await fetch(FIREBASE_URL+'/shares/'+VIEW_ID+'.json');
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+    if(!data) throw new Error();
+    STATE.sales=data.sales||[]; STATE.items=data.items||[]; STATE.shops=data.shops||[];
+    STATE.user={name:data.meta?.ownerName||'H2 Line',email:'viewer@h2line.app',id:'viewer'};
+    STATE.isViewer=true; STATE.page='dashboard'; render();
+  } catch {
+    root.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:24px;text-align:center"><div style="font-size:36px">\uD83D\uDD12</div><div style="font-family:Outfit,sans-serif;font-size:20px;font-weight:700">Link not found</div><div style="font-size:13px;color:var(--t2)">This share link may have expired or been disabled.</div></div>';
+  }
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function renderModal() {
+  if(!STATE.modal) return '';
+  let content='';
+  if(STATE.modal.type==='addsale') content=renderAddSaleModal();
+  else if(STATE.modal.type==='shop') content=renderShopModal(STATE.modal.data?.id);
+  else if(STATE.modal.type==='item') content=renderItemModal(STATE.modal.data?.id);
+  else if(STATE.modal.type==='share') content=renderShareModal();
+  return '<div class="mov" id="modal-overlay" onclick="if(event.target.id===\'modal-overlay\')closeModal()"><div class="msh">'+content+'</div></div>';
+}
+function bindModal() {
+  if(STATE.modal?.type==='addsale') recalc();
+  if(STATE.modal?.type==='item') updateTiers();
+}
+function closeModal() { STATE.modal=null; render(); }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+if(VIEW_ID) bootViewer();
+else render();
+
+// ── SERVICE WORKER (offline PWA support) ─────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swCode = `
+      const CACHE = 'h2line-v3';
+      self.addEventListener('install', e => {
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', e => {
+        e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+        self.clients.claim();
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+      });
+    `;
+    try {
+      const blob = new Blob([swCode], {type:'application/javascript'});
+      const url = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(url, {scope:'/'}).catch(()=>{});
+    } catch(e) {}
+  });
+}
+</script>
+</body>
+</html>
