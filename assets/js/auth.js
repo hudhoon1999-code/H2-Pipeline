@@ -20,50 +20,41 @@ function renderAuth() {
       '<button onclick="switchTab(\'forgot\')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:12px;font-weight:500;width:100%;text-align:center;padding:4px;font-family:Nunito,sans-serif">Forgot password?</button>' +
     '</div>';
 
-  // ── DESKTOP: two-column split layout ──
+  // ── DESKTOP: centered floating card layout ──
   if (isDesktop()) {
-    return '<div style="min-height:100vh;display:flex;background:#05050F;position:relative;overflow:hidden">' +
-      // Background effects — full page
-      '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 25% 50%,rgba(99,102,241,.18) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 80% 50%,rgba(139,92,246,.12) 0%,transparent 55%);pointer-events:none;z-index:0"></div>' +
+    const features = [
+      {ico:'📊',title:'Real-time Dashboard',sub:'Live sales, GST tracking & analytics',bg:'rgba(99,102,241,.15)',bd:'rgba(99,102,241,.3)',delay:'.35s'},
+      {ico:'🧾',title:'Invoice Generation',sub:'Professional PDF invoices with GST @ 8%',bg:'rgba(16,185,129,.15)',bd:'rgba(16,185,129,.3)',delay:'.45s'},
+      {ico:'🤖',title:'AI Invoice Scanning',sub:'Scan Lotus invoices — photo to data instantly',bg:'rgba(139,92,246,.15)',bd:'rgba(139,92,246,.3)',delay:'.55s'},
+      {ico:'☁️',title:'Cloud Sync',sub:'Firebase-powered across all your devices',bg:'rgba(14,165,233,.15)',bd:'rgba(14,165,233,.3)',delay:'.65s'},
+    ];
+    return '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#05050F;position:relative;overflow:hidden;padding:32px 24px">' +
+      '<div class="auth-db-orb auth-db-orb1"></div>' +
+      '<div class="auth-db-orb auth-db-orb2"></div>' +
+      '<div class="auth-db-orb auth-db-orb3"></div>' +
+      '<div class="auth-db-orb auth-db-orb4"></div>' +
       '<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0"></div>' +
-
-      // Left panel — brand (55% width)
-      '<div style="flex:0 0 55%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 72px;position:relative;z-index:1;border-right:1px solid rgba(255,255,255,.06);min-height:100vh">' +
-        '<div style="width:100%;max-width:440px">' +
-          '<img src="'+LOGO_AUTH+'" style="width:200px;height:auto;margin-bottom:24px;filter:drop-shadow(0 10px 40px rgba(99,102,241,.55))" alt="H2 Line">' +
-          '<div style="font-family:Outfit,sans-serif;font-size:38px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:12px">Your distribution<br>business, <span style="background:linear-gradient(135deg,#6366F1,#8B5CF6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">simplified.</span></div>' +
-          '<div style="font-size:15px;color:rgba(255,255,255,.4);margin-bottom:48px;line-height:1.6">Track sales, manage invoices, monitor your pipeline — all in one place.</div>' +
-          '<div style="display:flex;flex-direction:column;gap:14px">' +
-            '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;transition:all .2s" onmouseover="this.style.borderColor=\'rgba(99,102,241,.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\'">' +
-              '<div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📊</div>' +
-              '<div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Real-time Dashboard</div><div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px">Live sales, GST tracking & pipeline analytics</div></div>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;transition:all .2s" onmouseover="this.style.borderColor=\'rgba(16,185,129,.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\'">' +
-              '<div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧾</div>' +
-              '<div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Invoice Generation</div><div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px">Professional PDF invoices with GST @ 8%</div></div>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;transition:all .2s" onmouseover="this.style.borderColor=\'rgba(139,92,246,.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\'">' +
-              '<div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🤖</div>' +
-              '<div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">AI Invoice Scanning</div><div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px">Scan Lotus invoices — photo to data instantly</div></div>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;transition:all .2s" onmouseover="this.style.borderColor=\'rgba(14,165,233,.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\'">' +
-              '<div style="width:40px;height:40px;border-radius:10px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">☁️</div>' +
-              '<div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Cloud Sync</div><div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px">Firebase-powered, syncs across all your devices</div></div>' +
+      '<div class="auth-db-card">' +
+        '<div class="auth-db-left">' +
+          '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 25% 45%,rgba(99,102,241,.14) 0%,transparent 60%);pointer-events:none"></div>' +
+          '<div style="position:relative;z-index:1;width:100%;max-width:380px">' +
+            '<img src="'+LOGO_AUTH+'" class="auth-db-logo" alt="H2 Line">' +
+            '<div style="font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;animation:authFadeUp .6s .15s ease both">Your distribution<br>business, <span style="background:linear-gradient(135deg,#6366F1,#8B5CF6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">simplified.</span></div>' +
+            '<div style="font-size:14px;color:rgba(255,255,255,.38);margin-bottom:36px;line-height:1.65;animation:authFadeUp .6s .25s ease both">Track sales, manage invoices, monitor your pipeline — all in one place.</div>' +
+            '<div style="display:flex;flex-direction:column;gap:10px">' +
+              features.map(f => '<div class="auth-feature-item" style="animation:authFadeUp .5s '+f.delay+' ease both"><div style="width:38px;height:38px;border-radius:9px;background:'+f.bg+';border:1px solid '+f.bd+';display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">'+f.ico+'</div><div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.88)">'+f.title+'</div><div style="font-size:11px;color:rgba(255,255,255,.32);margin-top:2px">'+f.sub+'</div></div></div>').join('') +
             '</div>' +
           '</div>' +
         '</div>' +
-      '</div>' +
-
-      // Right panel — form (45% width)
-      '<div style="flex:0 0 45%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 72px;position:relative;z-index:1;min-height:100vh">' +
-        '<div style="width:100%;max-width:380px">' +
-          '<div style="margin-bottom:32px">' +
-            '<div style="font-family:Outfit,sans-serif;font-size:28px;font-weight:800;color:#fff;margin-bottom:6px">Welcome back</div>' +
-            '<div style="font-size:14px;color:rgba(255,255,255,.35)">Sign in to your H2 Line account</div>' +
-          '</div>' +
-          '<div class="auth-card">' + formHTML + '</div>' +
-          '<div style="text-align:center;margin-top:20px;font-size:11px;color:rgba(255,255,255,.18);line-height:1.8">' +
-            '🔒 Secured by Firebase Authentication<br>Data encrypted and synced across devices' +
+        '<div class="auth-db-right">' +
+          '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 70% 60%,rgba(139,92,246,.07) 0%,transparent 60%);pointer-events:none"></div>' +
+          '<div style="position:relative;z-index:1;width:100%;max-width:360px;animation:authFadeUp .6s .1s ease both">' +
+            '<div style="margin-bottom:30px">' +
+              '<div style="font-family:Outfit,sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:6px">Welcome back</div>' +
+              '<div style="font-size:13px;color:rgba(255,255,255,.32)">Sign in to your H2 Line account</div>' +
+            '</div>' +
+            '<div class="auth-card">' + formHTML + '</div>' +
+            '<div style="text-align:center;margin-top:18px;font-size:11px;color:rgba(255,255,255,.16);line-height:1.8">🔒 Secured by Firebase Authentication<br>Data encrypted and synced across devices</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -75,13 +66,14 @@ function renderAuth() {
     '<div class="auth-orb auth-orb1"></div>' +
     '<div class="auth-orb auth-orb2"></div>' +
     '<div class="auth-orb auth-orb3"></div>' +
-    '<div style="width:100%;max-width:400px;position:relative;z-index:1" class="fu">' +
-      '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px">' +
-        '<img src="'+LOGO_AUTH+'" style="width:160px;height:auto;margin-bottom:10px;filter:drop-shadow(0 6px 24px rgba(99,102,241,.5))" alt="H2 Line">' +
-        '<div style="font-size:12px;color:rgba(255,255,255,.35);font-weight:500;letter-spacing:.04em">Distribution · Sales · Invoicing</div>' +
+    '<div style="width:100%;max-width:400px;position:relative;z-index:1">' +
+      '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px;animation:authFadeUp .55s ease both">' +
+        '<img src="'+LOGO_AUTH+'" style="width:140px;height:auto;margin-bottom:12px;animation:authLogoFloat 5s ease-in-out infinite,authLogoBeat 3s ease-in-out infinite" alt="H2 Line">' +
+        '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);font-family:Outfit,sans-serif;letter-spacing:.01em;animation:authFadeUp .5s .12s ease both">H2 Line</div>' +
+        '<div style="font-size:11px;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.06em;margin-top:3px;animation:authFadeUp .5s .2s ease both">Distribution · Sales · Invoicing</div>' +
       '</div>' +
-      '<div class="auth-card">' + formHTML + '</div>' +
-      '<div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,.22);line-height:1.6">' +
+      '<div style="animation:authCardIn .55s .28s cubic-bezier(.22,1,.36,1) both"><div class="auth-card">' + formHTML + '</div></div>' +
+      '<div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,.2);line-height:1.6;animation:authFadeUp .5s .48s ease both">' +
         '🔒 Secured by Firebase &nbsp;·&nbsp; Add to Home Screen for app experience' +
       '</div>' +
     '</div>' +

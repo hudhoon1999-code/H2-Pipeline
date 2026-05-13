@@ -12,7 +12,7 @@ function render() {
     root.innerHTML = renderDesktopShell();
   } else {
     const viewerFab = STATE.isViewer ? '' : renderFab();
-    root.innerHTML = renderTopBar() + '<div id="content" class="fu">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
+    root.innerHTML = renderTopBar() + '<div id="content" class="page-in">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
   }
   bindPage();
   if (STATE.modal) bindModal();
@@ -108,7 +108,7 @@ function renderDesktopShell() {
   return sidebar +
     '<div id="dm">' +
     header +
-    '<div id="content" class="fu">' + renderPage() + '</div>' +
+    '<div id="content" class="page-in">' + renderPage() + '</div>' +
     '</div>' +
     fab +
     (STATE.modal ? renderModal() : '');
