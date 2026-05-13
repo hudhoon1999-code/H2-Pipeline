@@ -190,25 +190,34 @@ textarea.inp{resize:vertical;min-height:70px}
 .spb-val{font-size:13px;font-weight:800;font-family:'Outfit',sans-serif;color:var(--t)}
 .spb-cell.spb-act .spb-val{color:var(--a)}
 
-/* ── DESKTOP AUTH CENTERED CARD ────────────────────────────────────────────── */
-.auth-db-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
-.auth-db-orb1{width:520px;height:520px;background:rgba(99,102,241,.11);top:-220px;left:-180px;animation:authOrb1 18s ease-in-out infinite alternate}
-.auth-db-orb2{width:420px;height:420px;background:rgba(139,92,246,.09);bottom:-160px;right:-120px;animation:authOrb2 14s ease-in-out infinite alternate}
-.auth-db-orb3{width:320px;height:320px;background:rgba(14,165,233,.07);top:25%;right:15%;animation:authOrb3 20s ease-in-out infinite alternate}
-.auth-db-orb4{width:220px;height:220px;background:rgba(244,114,182,.05);bottom:15%;left:20%;animation:authOrb1 16s 3s ease-in-out infinite alternate}
-@keyframes authOrb1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,-30px) scale(1.08)}}
-@keyframes authOrb2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-30px,25px) scale(.95)}}
-@keyframes authOrb3{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,40px) scale(1.05)}}
-@keyframes authCardIn{from{opacity:0;transform:scale(.95) translateY(24px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes authLogoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-@keyframes authLogoBeat{0%,100%{filter:drop-shadow(0 10px 40px rgba(99,102,241,.55))}50%{filter:drop-shadow(0 16px 60px rgba(99,102,241,.9)) drop-shadow(0 0 40px rgba(139,92,246,.45))}}
-@keyframes authFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.auth-db-card{position:relative;z-index:1;display:flex;width:100%;max-width:960px;min-height:600px;border-radius:28px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.07) inset;animation:authCardIn .7s cubic-bezier(.22,1,.36,1) both}
-.auth-db-left{flex:0 0 54%;background:linear-gradient(145deg,rgba(18,18,35,.98),rgba(10,10,22,.98));border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 48px;position:relative;overflow:hidden}
-.auth-db-right{flex:1;background:rgba(8,8,18,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 48px;position:relative}
-.auth-db-logo{width:170px;height:auto;margin-bottom:28px;animation:authLogoFloat 5s ease-in-out infinite,authLogoBeat 3s ease-in-out infinite}
-.auth-feature-item{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;transition:all .25s ease;cursor:default}
-.auth-feature-item:hover{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.28);transform:translateX(5px)}
+/* ── DESKTOP AUTH FULL-PAGE SPLIT ───────────────────────────────────────────── */
+.auth-desktop-wrap{width:100%;height:100%;display:flex;background:#05050F;position:relative;overflow:hidden}
+.auth-desktop-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.045) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 20%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 20%,transparent 100%);pointer-events:none;z-index:0}
+.auth-db-orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.auth-db-orb1{width:600px;height:600px;background:rgba(99,102,241,.13);top:-250px;left:-200px;animation:authOrb1 20s ease-in-out infinite alternate}
+.auth-db-orb2{width:500px;height:500px;background:rgba(139,92,246,.10);bottom:-200px;right:-150px;animation:authOrb2 16s ease-in-out infinite alternate}
+.auth-db-orb3{width:380px;height:380px;background:rgba(14,165,233,.07);top:20%;right:20%;animation:authOrb3 22s ease-in-out infinite alternate}
+.auth-db-orb4{width:260px;height:260px;background:rgba(244,114,182,.06);bottom:10%;left:30%;animation:authOrb1 18s 4s ease-in-out infinite alternate}
+@keyframes authOrb1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,-40px) scale(1.1)}}
+@keyframes authOrb2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-40px,35px) scale(.93)}}
+@keyframes authOrb3{0%{transform:translate(0,0) scale(1)}100%{transform:translate(25px,50px) scale(1.07)}}
+@keyframes authCardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes authLogoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes authLogoBeat{0%,100%{filter:drop-shadow(0 10px 40px rgba(99,102,241,.55))}50%{filter:drop-shadow(0 18px 64px rgba(99,102,241,.95)) drop-shadow(0 0 48px rgba(139,92,246,.5))}}
+@keyframes authFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+/* left panel */
+.auth-desktop-left{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 72px;position:relative;z-index:1;border-right:1px solid rgba(255,255,255,.07)}
+.auth-desktop-left-glow{position:absolute;inset:0;background:radial-gradient(ellipse 75% 65% at 30% 50%,rgba(99,102,241,.13) 0%,transparent 65%);pointer-events:none}
+.auth-desktop-left-inner{width:100%;max-width:480px;position:relative;z-index:1}
+/* right panel */
+.auth-desktop-right{flex:0 0 44%;display:flex;align-items:center;justify-content:center;padding:60px 72px;position:relative;z-index:1;background:rgba(255,255,255,.013)}
+.auth-desktop-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 65% 55%,rgba(139,92,246,.08) 0%,transparent 65%);pointer-events:none}
+.auth-desktop-right-inner{width:100%;max-width:390px;position:relative;z-index:1}
+/* logo */
+.auth-db-logo{width:180px;height:auto;margin-bottom:30px;animation:authLogoFloat 5s ease-in-out infinite,authLogoBeat 3s ease-in-out infinite;animation-fill-mode:both}
+/* feature items */
+.auth-feature-item{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:15px 18px;transition:all .25s ease;cursor:default}
+.auth-feature-item:hover{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3);transform:translateX(6px)}
 
 /* ── PAGE ENTER TRANSITION ──────────────────────────────────────────────────── */
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}

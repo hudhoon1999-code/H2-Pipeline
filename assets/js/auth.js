@@ -20,42 +20,49 @@ function renderAuth() {
       '<button onclick="switchTab(\'forgot\')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:12px;font-weight:500;width:100%;text-align:center;padding:4px;font-family:Nunito,sans-serif">Forgot password?</button>' +
     '</div>';
 
-  // ── DESKTOP: centered floating card layout ──
+  // ── DESKTOP: full-page split layout ──
   if (isDesktop()) {
     const features = [
-      {ico:'📊',title:'Real-time Dashboard',sub:'Live sales, GST tracking & analytics',bg:'rgba(99,102,241,.15)',bd:'rgba(99,102,241,.3)',delay:'.35s'},
-      {ico:'🧾',title:'Invoice Generation',sub:'Professional PDF invoices with GST @ 8%',bg:'rgba(16,185,129,.15)',bd:'rgba(16,185,129,.3)',delay:'.45s'},
-      {ico:'🤖',title:'AI Invoice Scanning',sub:'Scan Lotus invoices — photo to data instantly',bg:'rgba(139,92,246,.15)',bd:'rgba(139,92,246,.3)',delay:'.55s'},
-      {ico:'☁️',title:'Cloud Sync',sub:'Firebase-powered across all your devices',bg:'rgba(14,165,233,.15)',bd:'rgba(14,165,233,.3)',delay:'.65s'},
+      {ico:'📊',title:'Real-time Dashboard',sub:'Live sales, GST tracking & pipeline analytics',bg:'rgba(99,102,241,.15)',bd:'rgba(99,102,241,.3)',delay:'.38s'},
+      {ico:'🧾',title:'Invoice Generation',sub:'Professional PDF invoices with GST @ 8%',bg:'rgba(16,185,129,.15)',bd:'rgba(16,185,129,.3)',delay:'.50s'},
+      {ico:'🤖',title:'AI Invoice Scanning',sub:'Scan Lotus invoices — photo to data instantly',bg:'rgba(139,92,246,.15)',bd:'rgba(139,92,246,.3)',delay:'.62s'},
+      {ico:'☁️',title:'Cloud Sync',sub:'Firebase-powered, syncs across all your devices',bg:'rgba(14,165,233,.15)',bd:'rgba(14,165,233,.3)',delay:'.74s'},
     ];
-    return '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#05050F;position:relative;overflow:hidden;padding:32px 24px">' +
+    return '<div class="auth-desktop-wrap">' +
       '<div class="auth-db-orb auth-db-orb1"></div>' +
       '<div class="auth-db-orb auth-db-orb2"></div>' +
       '<div class="auth-db-orb auth-db-orb3"></div>' +
       '<div class="auth-db-orb auth-db-orb4"></div>' +
-      '<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0"></div>' +
-      '<div class="auth-db-card">' +
-        '<div class="auth-db-left">' +
-          '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 25% 45%,rgba(99,102,241,.14) 0%,transparent 60%);pointer-events:none"></div>' +
-          '<div style="position:relative;z-index:1;width:100%;max-width:380px">' +
-            '<img src="'+LOGO_AUTH+'" class="auth-db-logo" alt="H2 Line">' +
-            '<div style="font-family:Outfit,sans-serif;font-size:34px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;animation:authFadeUp .6s .15s ease both">Your distribution<br>business, <span style="background:linear-gradient(135deg,#6366F1,#8B5CF6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">simplified.</span></div>' +
-            '<div style="font-size:14px;color:rgba(255,255,255,.38);margin-bottom:36px;line-height:1.65;animation:authFadeUp .6s .25s ease both">Track sales, manage invoices, monitor your pipeline — all in one place.</div>' +
-            '<div style="display:flex;flex-direction:column;gap:10px">' +
-              features.map(f => '<div class="auth-feature-item" style="animation:authFadeUp .5s '+f.delay+' ease both"><div style="width:38px;height:38px;border-radius:9px;background:'+f.bg+';border:1px solid '+f.bd+';display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">'+f.ico+'</div><div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.88)">'+f.title+'</div><div style="font-size:11px;color:rgba(255,255,255,.32);margin-top:2px">'+f.sub+'</div></div></div>').join('') +
-            '</div>' +
+      '<div class="auth-desktop-grid"></div>' +
+
+      // ── Left panel ──
+      '<div class="auth-desktop-left">' +
+        '<div class="auth-desktop-left-glow"></div>' +
+        '<div class="auth-desktop-left-inner">' +
+          '<img src="'+LOGO_AUTH+'" class="auth-db-logo" alt="H2 Line">' +
+          '<h1 style="font-family:Outfit,sans-serif;font-size:40px;font-weight:800;color:#fff;line-height:1.18;margin:0 0 14px;animation:authFadeUp .65s .18s ease both">Your distribution<br>business, <span style="background:linear-gradient(135deg,#6366F1,#8B5CF6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">simplified.</span></h1>' +
+          '<p style="font-size:15px;color:rgba(255,255,255,.38);margin:0 0 44px;line-height:1.7;animation:authFadeUp .65s .30s ease both">Track sales, manage invoices, monitor your pipeline — all in one place.</p>' +
+          '<div style="display:flex;flex-direction:column;gap:11px">' +
+            features.map(f =>
+              '<div class="auth-feature-item" style="animation:authFadeUp .55s '+f.delay+' ease both">' +
+                '<div style="width:42px;height:42px;border-radius:11px;background:'+f.bg+';border:1px solid '+f.bd+';display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">'+f.ico+'</div>' +
+                '<div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">'+f.title+'</div><div style="font-size:12px;color:rgba(255,255,255,.32);margin-top:2px">'+f.sub+'</div></div>' +
+              '</div>'
+            ).join('') +
           '</div>' +
         '</div>' +
-        '<div class="auth-db-right">' +
-          '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 70% 60%,rgba(139,92,246,.07) 0%,transparent 60%);pointer-events:none"></div>' +
-          '<div style="position:relative;z-index:1;width:100%;max-width:360px;animation:authFadeUp .6s .1s ease both">' +
-            '<div style="margin-bottom:30px">' +
-              '<div style="font-family:Outfit,sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:6px">Welcome back</div>' +
-              '<div style="font-size:13px;color:rgba(255,255,255,.32)">Sign in to your H2 Line account</div>' +
-            '</div>' +
-            '<div class="auth-card">' + formHTML + '</div>' +
-            '<div style="text-align:center;margin-top:18px;font-size:11px;color:rgba(255,255,255,.16);line-height:1.8">🔒 Secured by Firebase Authentication<br>Data encrypted and synced across devices</div>' +
+      '</div>' +
+
+      // ── Right panel ──
+      '<div class="auth-desktop-right">' +
+        '<div class="auth-desktop-right-glow"></div>' +
+        '<div class="auth-desktop-right-inner" style="animation:authCardIn .65s .08s cubic-bezier(.22,1,.36,1) both">' +
+          '<div style="margin-bottom:32px">' +
+            '<div style="font-family:Outfit,sans-serif;font-size:30px;font-weight:800;color:#fff;margin-bottom:7px">Welcome back</div>' +
+            '<div style="font-size:14px;color:rgba(255,255,255,.32)">Sign in to your H2 Line account</div>' +
           '</div>' +
+          '<div class="auth-card">' + formHTML + '</div>' +
+          '<div style="text-align:center;margin-top:22px;font-size:11px;color:rgba(255,255,255,.16);line-height:1.8">🔒 Secured by Firebase Authentication<br>Data encrypted and synced across devices</div>' +
         '</div>' +
       '</div>' +
     '</div>';
