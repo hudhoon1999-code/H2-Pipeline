@@ -1,5 +1,4 @@
 'use strict';
-// ── SHOPS ─────────────────────────────────────────────────────────────────
 // ── SHOPS ─────────────────────────────────────────────────────────────────────
 
 function renderShops() {
@@ -218,8 +217,14 @@ function openShopModal(id) { STATE.modal={type:'shop',data:{id}}; render(); }
 function delShop(id) { if(confirm('Remove this shop?')){STATE.shops=STATE.shops.filter(s=>s.id!==id);saveState();showToast('Removed');render();} }
 function renderShopModal(id) {
   const shop = id ? STATE.shops.find(s=>s.id===id) : null;
-  const v = k => shop ? (shop[k]||'') : '';
-  const hasCoords = !!(shop?.lat && shop?.lng);
+  // Restore values saved before pin-drop, or fall back to existing shop data
+  const saved = STATE.modal?.data?.saved || {};
+  const pendingLat = STATE.modal?.data?.lat || null;
+  const pendingLng = STATE.modal?.data?.lng || null;
+  const v = k => saved[k] !== undefined ? saved[k] : (shop ? (shop[k]||'') : '');
+  const lat = pendingLat || shop?.lat || '';
+  const lng = pendingLng || shop?.lng || '';
+  const hasCoords = !!(lat && lng);
   return '<div class="mhan"></div><div class="mtit">' + (shop?'Edit Shop':'Add Shop') + '</div><div class="fg">' +
     '<div class="iw"><label class="il">Shop Name *</label><input id="sm-name" class="inp" value="' + v('name') + '" placeholder="e.g. Al Noor Mart"></div>' +
     '<div class="fr"><div class="iw"><label class="il">Owner</label><input id="sm-owner" class="inp" value="' + v('owner') + '" placeholder="Owner name"></div>' +
@@ -234,11 +239,11 @@ function renderShopModal(id) {
         (hasCoords ? '<a href="https://maps.google.com/?q=' + (shop.lat||'') + ',' + (shop.lng||'') + '" target="_blank" style="font-size:11px;color:var(--a);text-decoration:none">View on map ↗</a>' : '') +
       '</div>' +
       // Hidden lat/lng fields — set by pin drop or GPS
-      '<input type="hidden" id="sm-lat" value="' + v('lat') + '">' +
-      '<input type="hidden" id="sm-lng" value="' + v('lng') + '">' +
+      '<input type="hidden" id="sm-lat" value="' + (lat||'') + '">' +
+      '<input type="hidden" id="sm-lng" value="' + (lng||'') + '">' +
       // Status + preview
       '<div id="sm-loc-status" style="font-size:12px;margin-bottom:10px;' + (hasCoords?'color:var(--ok)':'color:var(--t3)') + '">' +
-        (hasCoords ? '✓ Location set: ' + parseFloat(shop.lat).toFixed(4) + ', ' + parseFloat(shop.lng).toFixed(4) : 'No location set — drop a pin or use GPS') +
+        (hasCoords ? '✓ Location set: ' + parseFloat(lat).toFixed(4) + ', ' + parseFloat(lng).toFixed(4) : 'No location set — drop a pin or use GPS') +
       '</div>' +
       // Map preview (shown when coords exist)
       '<div id="shop-loc-preview" style="display:' + (hasCoords?'block':'none') + ';border-radius:var(--rs);overflow:hidden;margin-bottom:10px">' +
@@ -257,8 +262,17 @@ function renderShopModal(id) {
 let _pinDropMap=null, _pinDropMarker=null, _pinDropLat=null, _pinDropLng=null;
 
 function openPinDropModal(shopId) {
+  // Save current form values so they survive the modal switch
+  const saved = {
+    name:  (document.getElementById('sm-name')||{}).value||'',
+    owner: (document.getElementById('sm-owner')||{}).value||'',
+    contact:(document.getElementById('sm-contact')||{}).value||'',
+    area:  (document.getElementById('sm-area')||{}).value||'',
+    priority:(document.getElementById('sm-priority')||{}).value||'Medium',
+    notes: (document.getElementById('sm-notes')||{}).value||'',
+  };
   window._pinDropShopId = shopId;
-  STATE.modal = {type:'pindrop', data:{shopId}};
+  STATE.modal = {type:'pindrop', data:{shopId, saved}};
   render();
 }
 
@@ -333,38 +347,26 @@ function centerPinDropOnMe() {
 function confirmPinDrop() {
   if(!_pinDropLat||!_pinDropLng){showToast('⚠️ Tap the map to drop a pin first');return;}
   const shopId = window._pinDropShopId;
+  const saved = STATE.modal?.data?.saved || {};
   if(shopId) {
-    // Save directly to existing shop
     STATE.shops=STATE.shops.map(s=>s.id===shopId?{...s,lat:_pinDropLat,lng:_pinDropLng}:s);
     saveState();
     const name=STATE.shops.find(s=>s.id===shopId)?.name||'shop';
     showToast('✓ Location saved for '+name);
   }
-  // Pass coords back to shop modal
-  window._pendingLat=_pinDropLat; window._pendingLng=_pinDropLng;
   const lat=_pinDropLat, lng=_pinDropLng;
-  _pinDropLat=null;_pinDropLng=null;
+  _pinDropLat=null; _pinDropLng=null;
   if(_pinDropMap){_pinDropMap.remove();_pinDropMap=null;}
-  STATE.modal={type:'shop',data:{id:shopId||''}};
+  STATE.modal={type:'shop', data:{id:shopId||'', saved, lat, lng}};
   render();
-  // Restore pin coords into modal after render
-  setTimeout(()=>{
-    const latEl=document.getElementById('sm-lat'),lngEl=document.getElementById('sm-lng');
-    if(latEl) latEl.value=lat;
-    if(lngEl) lngEl.value=lng;
-    const preview=document.getElementById('shop-loc-preview');
-    if(preview){preview.style.display='block';renderShopLocationPreview(lat,lng);}
-    const st=document.getElementById('sm-loc-status');
-    if(st){st.textContent='✓ Location set: '+lat.toFixed(4)+', '+lng.toFixed(4);st.style.color='var(--ok)';}
-    window._pendingLat=null;window._pendingLng=null;
-  },100);
 }
 
 function closePinDrop() {
   if(_pinDropMap){_pinDropMap.remove();_pinDropMap=null;_pinDropMarker=null;}
-  _pinDropLat=null;_pinDropLng=null;
+  _pinDropLat=null; _pinDropLng=null;
   const shopId=window._pinDropShopId;
-  STATE.modal=shopId?{type:'shop',data:{id:shopId}}:null;
+  const saved = STATE.modal?.data?.saved || {};
+  STATE.modal=shopId?{type:'shop',data:{id:shopId, saved}}:{type:'shop',data:{id:'', saved}};
   render();
 }
 
