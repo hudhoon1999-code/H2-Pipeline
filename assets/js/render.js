@@ -113,3 +113,5 @@ function renderDesktopShell() {
     fab +
     (STATE.modal ? renderModal() : '');
 }
+
+function closeModal() { STATE.modal=null; render(); }

@@ -222,3 +222,48 @@ function goPage(p) {
   setTimeout(() => { const c = document.getElementById('content'); if(c) c.scrollTop = 0; }, 10);
   render();
 }
+
+function bootLocalAuth() {
+  // No Firebase — use localStorage auth
+  const saved = db.get('user');
+  if (saved) {
+    STATE.user = saved;
+    STATE.isAdmin = saved.email === ADMIN_EMAIL || saved.role === 'admin';
+    STATE.isAgent = !STATE.isAdmin;
+    STATE.agentId = null;
+    STATE.sales = db.get('sales',[]).map(normalizeSaleGSTRow);
+    STATE.items = db.get('items',[]);
+    STATE.shops = db.get('shops',[]);
+    STATE.agents = db.get('agents',[]);
+    STATE.targets = db.get('targets',[]);
+    if(!STATE.isAdmin){ const a=STATE.agents.find(a=>a.email===saved.email); if(a) STATE.agentId=a.id; }
+  }
+  window.saveToFirestore = ()=>{};
+  window.doFBLogin = function() {
+    const email=((document.getElementById('a-email')||{}).value||'').trim();
+    const pw=(document.getElementById('a-pw')||{}).value||'';
+    const sub=document.getElementById('a-submit');
+    if(!email||!pw){showAuthMsg('Enter email and password');return;}
+    const users=db.get('users',[]);
+    const u=users.find(x=>x.email===email&&x.password===pw);
+    if(u){ db.set('user',u); STATE.user=u; STATE.isAdmin=u.email===ADMIN_EMAIL||u.role==='admin'; STATE.isAgent=!STATE.isAdmin;
+      STATE.sales=db.get('sales',[]).map(normalizeSaleGSTRow); STATE.items=db.get('items',[]); STATE.shops=db.get('shops',[]); STATE.agents=db.get('agents',[]); STATE.targets=db.get('targets',[]); render();
+    } else { if(sub){sub.textContent='Log In';sub.disabled=false;} showAuthMsg('Wrong email or password'); }
+  };
+  window.doFBSignup = function() {
+    const name=((document.getElementById('a-name')||{}).value||'').trim();
+    const email=((document.getElementById('a-email')||{}).value||'').trim();
+    const pw=(document.getElementById('a-pw')||{}).value||'';
+    const sub=document.getElementById('a-submit');
+    if(!name||!email||!pw){showAuthMsg('Fill all fields');return;}
+    const users=db.get('users',[]);
+    if(users.find(u=>u.email===email)){ if(sub){sub.textContent='Create Account';sub.disabled=false;} showAuthMsg('Email already registered — try Log In'); return; }
+    const isAdmin=email===ADMIN_EMAIL;
+    const nu={id:uid(),name,email,password:pw,role:isAdmin?'admin':'agent',approved:isAdmin};
+    db.set('users',[...users,nu]); db.set('user',nu); STATE.user=nu; STATE.isAdmin=isAdmin; STATE.isAgent=!isAdmin;
+    STATE.sales=db.get('sales',[]).map(normalizeSaleGSTRow); STATE.items=db.get('items',[]); STATE.shops=db.get('shops',[]); STATE.agents=db.get('agents',[]); STATE.targets=db.get('targets',[]); render();
+  };
+  window.doFBLogout = function() { if(!confirm('Sign out?')) return; db.set('user',null); STATE.user=null; STATE.isAdmin=false; STATE.isAgent=false; render(); };
+  window.doFBForgot = function() { showAuthMsg('Reset not available offline'); };
+  render();
+}

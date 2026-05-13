@@ -128,3 +128,5 @@ function saveState() {
   if (window.saveToFirestore) window.saveToFirestore();
 }
 
+// Admin email — used by firebase.js and auth.js
+const ADMIN_EMAIL = 'hudhoon1999@gmail.com';

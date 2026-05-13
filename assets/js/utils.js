@@ -143,3 +143,17 @@ function showToast(msg) {
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+function normShopName(n) {
+  return String(n||'').toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function gpsDistance(lat1, lng1, lat2, lng2) {
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function fmtDist(m){ return m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km'; }
+
+function getGPS(opts={}){  return new Promise((resolve,reject)=>{ if(!navigator.geolocation){reject(new Error("GPS not available"));return;} navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:30000,...opts}); }); }

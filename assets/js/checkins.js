@@ -1,25 +1,8 @@
 'use strict';
 // ── GEOLOCATION + MAP + CHECK-IN ─────────────────────────────────────────
-// ── GEOLOCATION + MAP + CHECK-IN (Free: Leaflet + OpenStreetMap + Haversine) ──
 
 const CHECKIN_RADIUS = 100; // metres — configurable
 
-// Haversine — pure JS, zero API calls
-function gpsDistance(lat1, lng1, lat2, lng2) {
-  const R=6371000, toRad=x=>x*Math.PI/180;
-  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
-  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-function fmtDist(m){ return m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km'; }
-function getGPS(opts={}){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation){reject(new Error('GPS not available'));return;}
-    navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:30000,...opts});
-  });
-}
-
-// ── SHOP LOCATION CAPTURE ────────────────────────────────────────────────────
 function renderShopLocationPreview(lat, lng) {
   const preview=document.getElementById('shop-loc-preview');
   if(!preview||!window.L) return;
@@ -311,7 +294,6 @@ function renderMyCheckins() {
     renderCheckinHistory(null)+
   '</div>';
 }
-
 
 function renderItems() {
   const cats = [...new Set(STATE.items.map(i=>i.category).filter(Boolean))];

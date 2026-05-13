@@ -99,7 +99,6 @@ function initItemModalScroll() {
     else bar.classList.remove('spb-on');
   }, { passive: true });
 }
-function closeModal() { STATE.modal=null; render(); }
 
 // ── SCAN INVOICE MODAL ────────────────────────────────────────────────────────
 let scanState = { mode: 'pick', imageData: null, imageType: null, imageName: null, rows: [], meta: {} };

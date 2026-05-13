@@ -267,9 +267,6 @@ function restoreBackup(input) {
 }
 
 // ── SMART SHOP IMPORTER ──────────────────────────────────────────────────────
-function normShopName(n) {
-  return String(n||'').toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
-}
 function loadShopImportFile(input) {
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
