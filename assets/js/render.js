@@ -19,7 +19,7 @@ function render() {
 }
 
 function renderDesktopShell() {
-  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts'};
+  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',agents:'Agents',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts'};
   const pendingCount = (() => {
     const imap={};
     STATE.sales.forEach(s=>{const k=s.invoiceId||(s.shopName+'-'+s.date);if(!imap[k])imap[k]={f:0,p:0};imap[k].f+=saleFinalTotal(s);if(s.paymentStatus==='Paid')imap[k].p+=saleFinalTotal(s);});
@@ -40,6 +40,7 @@ function renderDesktopShell() {
     { section: 'Catalogue', items: [
       {id:'shops',ico:IC.shop,lbl:'Shops'},
       {id:'items',ico:IC.items,lbl:'Items'},
+      ...(STATE.isAdmin ? [{id:'agents',ico:IC.agents,lbl:'Agents'}] : []),
     ]},
     { section: 'Manage', items: [
       {id:'alerts',ico:IC.bell,lbl:'Alerts',badge:alertsDue},
