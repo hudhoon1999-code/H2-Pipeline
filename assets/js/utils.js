@@ -157,3 +157,25 @@ function gpsDistance(lat1, lng1, lat2, lng2) {
 function fmtDist(m){ return m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km'; }
 
 function getGPS(opts={}){  return new Promise((resolve,reject)=>{ if(!navigator.geolocation){reject(new Error("GPS not available"));return;} navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:30000,...opts}); }); }
+
+// ── PWA MANIFEST ──────────────────────────────────────────────────────────
+;(function() {
+  const manifest = {
+    name: 'H2 Line',
+    short_name: 'H2 Line',
+    description: 'Distribution sales, invoicing and pipeline management',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#0A0A0F',
+    theme_color: '#6366F1',
+    orientation: 'portrait-primary',
+    icons: [
+      { src: LOGO_ICON, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: LOGO_ICON, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const url = URL.createObjectURL(blob);
+  const el = document.getElementById('pwa-manifest');
+  if (el) el.href = url;
+})()

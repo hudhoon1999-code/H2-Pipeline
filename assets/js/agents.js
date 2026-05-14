@@ -1,5 +1,10 @@
 'use strict';
-// ── AGENTS PAGE ───────────────────────────────────────────────────────────
+// ── RESPONSIVE RESIZE ─────────────────────────────────────────────────────────
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => { if(STATE.user) render(); }, 120);
+});
 // ── AGENTS PAGE ───────────────────────────────────────────────────────────────
 let agentDetail = null;
 

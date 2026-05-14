@@ -116,3 +116,38 @@ function renderDesktopShell() {
 }
 
 function closeModal() { STATE.modal=null; render(); }
+
+// ── PAGE ROUTER ──────────────────────────────────────────────────────────────
+// Pages accessible by agents (non-admin)
+const AGENT_PAGES = new Set(['dashboard','sales','invoices','pending','shops','items','checkins','nearby','map','settings']);
+
+function renderPage() {
+  // Block agents from admin-only pages
+  if (!STATE.isAdmin && STATE.isAgent && !AGENT_PAGES.has(STATE.page)) {
+    return renderDashboard();
+  }
+  switch(STATE.page) {
+    case 'checkins': return renderMyCheckins();
+    case 'nearby': return renderNearbyShops();
+    case 'map': return renderMapPage();
+    case 'agents': return renderAgentsPage();
+    case 'alerts': return renderAlertsPage();
+    case 'pending': return renderPendingPage();
+    case 'dashboard': return renderDashboard();
+    case 'sales': return renderSalesPage();
+    case 'invoices': return renderInvoices();
+    case 'report': return STATE.isAdmin ? renderReport() : renderDashboard();
+    case 'shops': return renderShops();
+    case 'items': return renderItems();
+    case 'importexport': return STATE.isAdmin ? renderImportExport() : renderDashboard();
+    case 'settings': return renderSettings();
+    default: return renderDashboard();
+  }
+}
+function bindPage() {
+  if (STATE.page==='sales') bindSales();
+  else if (STATE.page==='shops') bindShops();
+  else if (STATE.page==='items') bindItems();
+  else if (STATE.page==='map') bindMapPage();
+  else if (STATE.page==='nearby') {} // no binding needed
+}
