@@ -220,104 +220,242 @@ function saveEditSale(id) {
 
 
 function generateInvoicePDF(inv) {
-  const biz = db.get('bizProfile', {name:'H2 Line Distribution',address:'Male\', Maldives',tel:'',tin:'',bank:''});
-  const shop = STATE.shops.find(s=>normShopName(s.name)===normShopName(inv.shopName))||{};
-  const base = inv.items.reduce((a,i)=>a+saleBaseTotal(i),0);
-  const gstTot = inv.items.reduce((a,i)=>a+saleGstTotal(i),0);
-  const rows = inv.items.map((it,idx)=>`
-    <tr>
-      <td>${(idx+1)}</td>
-      <td><strong>${it.itemName}</strong>${it.category?'<br><small>'+it.category+'</small>':''}</td>
-      <td>${tierLabel(it.priceType)}</td>
-      <td style="text-align:center">${it.quantity}</td>
-      <td style="text-align:right">${money(it.unitPrice,inv.currency)}</td>
-      <td style="text-align:right">${money(saleBaseTotal(it),inv.currency)}</td>
-      <td style="text-align:center">${it.gstInclusive?'Incl.':'T'}</td>
-    </tr>`).join('');
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Invoice ${inv.id}</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Arial',sans-serif;font-size:12px;color:#111;background:#fff;padding:20px}
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #111}
-.biz-name{font-size:18px;font-weight:bold;margin-bottom:2px}
-.biz-sub{font-size:10px;color:#555;line-height:1.5}
-.inv-title{font-size:22px;font-weight:bold;font-style:italic;text-align:right}
-.inv-num{font-size:14px;font-weight:bold;text-align:right}
-.inv-meta{font-size:10px;text-align:right;color:#555;margin-top:4px}
-.bank-notice{background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;font-size:9px;margin:8px 0;text-align:center}
-.bill-section{display:flex;justify-content:space-between;margin:12px 0;padding:8px;border:1px solid #ddd}
-.bill-lbl{font-size:9px;font-weight:bold;text-transform:uppercase;color:#666;margin-bottom:3px}
-.bill-val{font-size:12px;font-weight:bold}
-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
-thead tr{background:#111;color:#fff}
-th{padding:6px 8px;text-align:left;font-size:10px;font-weight:bold;letter-spacing:.04em}
-td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:middle}
-tr:last-child td{border-bottom:none}
-.totals{margin-left:auto;width:260px;border:1px solid #ddd;margin-top:8px}
-.tot-row{display:flex;justify-content:space-between;padding:5px 10px;font-size:12px}
-.tot-row.grand{background:#111;color:#fff;font-weight:bold;font-size:14px}
-.sig-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px;border-top:1px solid #ddd;padding-top:12px}
-.sig-box{font-size:10px;line-height:2.2;color:#444}
-.notice{margin-top:14px;font-size:9px;color:#777;text-align:center;border-top:1px solid #eee;padding-top:8px;line-height:1.6}
-@media print{body{padding:0}}
-</style></head><body>
-<div class="hdr">
-  <div>
-    <div class="biz-name">${biz.name}</div>
-    <div class="biz-sub">${biz.address}${biz.tel?'<br>TEL: '+biz.tel:''}</div>
-    ${biz.tin?'<div class="biz-sub">TIN: '+biz.tin+'</div>':''}
-  </div>
-  <div>
-    <div class="inv-title">Tax Invoice</div>
-    <div class="inv-num">${inv.id}</div>
-    <div class="inv-meta">Date: ${inv.date}<br>Printed: ${new Date().toLocaleDateString()}</div>
-  </div>
-</div>
-${biz.bank?'<div class="bank-notice">Payments: '+biz.bank+'</div>':''}
-<div class="bill-section">
-  <div>
-    <div class="bill-lbl">Bill To</div>
-    <div class="bill-val">${inv.shopName}</div>
-    ${shop.owner?'<div style="font-size:11px">'+shop.owner+'</div>':''}
-    ${shop.area?'<div style="font-size:10px;color:#666">'+shop.area+'</div>':''}
-    ${shop.contact?'<div style="font-size:10px;color:#666">📞 '+shop.contact+'</div>':''}
-  </div>
-  <div style="text-align:right">
-    <div class="bill-lbl">Invoice Details</div>
-    <div style="font-size:10px;line-height:1.8">Ref: ${inv.id}<br>Date: ${inv.date}<br>Items: ${inv.items.length}</div>
-  </div>
-</div>
-<table>
-  <thead><tr><th>#</th><th>Item Name</th><th>Pack Type</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Ext Price</th><th style="text-align:center">Tax</th></tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<div class="totals">
-  <div class="tot-row"><span>Subtotal:</span><span>${money(base)}</span></div>
-  <div class="tot-row"><span>GST 8%:</span><span>+ ${money(gstTot)}</span></div>
-  <div class="tot-row grand"><span>RECEIPT TOTAL:</span><span>${money(inv.finalTotal)}</span></div>
-</div>
-<div class="sig-section">
-  <div class="sig-box">
-    <strong>Goods Delivered By:</strong><br>
-    Name &amp; Phone No:................................<br>
-    Date:.................. Signature:....................<br>
-    Total No. of Packages Delivered: . . . . . . . .
-  </div>
-  <div class="sig-box">
-    <strong>Goods Received in Good Condition:</strong><br>
-    Location, ID, Name &amp; Phone No:.................<br>
-    Date:................... Signature:...................<br>
-    Total No of Packages Received: . . . . . . . . .
-  </div>
-</div>
-<div class="notice">
-  Notice must be given of any goods not received, damaged or short within 48 hours from delivery date.<br>
-  Complaints accepted only in writing. Invoice assumed correct if no discrepancy notified.
-</div>
-</body></html>`;
-  // Download as HTML file — open in browser and use Share → Print to get PDF
-  const fname = 'invoice-' + (inv.id||'draft').replace(/[^a-z0-9]/gi,'-') + '-' + inv.date + '.html';
-  dlFile(html, fname, 'text/html');
-  showToast('✓ Invoice downloaded — open file → Share → Print for PDF');
+  if (!window.jspdf) { showToast('⚠️ PDF library not loaded yet — try again'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const biz = db.get('bizProfile', {name:'H2 Line',address:"Male', Maldives",tel:'',tin:'',bank:''});
+  const shop = STATE.shops.find(s => normShopName(s.name) === normShopName(inv.shopName)) || {};
+  const base = inv.items.reduce((a, i) => a + saleBaseTotal(i), 0);
+  const gstTot = inv.items.reduce((a, i) => a + saleGstTotal(i), 0);
+  const stat = inv.paid >= inv.finalTotal && inv.finalTotal > 0 ? 'PAID'
+             : inv.paid > 0 ? 'PARTIAL' : 'UNPAID';
+
+  const W = 210, M = 14;
+  let y = M;
+
+  // ── HEADER BAR ──────────────────────────────────────────────────────────────
+  doc.setFillColor(17, 17, 17);
+  doc.rect(M, y, W - M * 2, 20, 'F');
+
+  // Biz name
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(biz.name || 'H2 Line', M + 4, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  if (biz.address) doc.text(biz.address, M + 4, y + 12);
+  if (biz.tel) doc.text('TEL: ' + biz.tel, M + 4, y + 17);
+
+  // Invoice title (right)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.text('TAX INVOICE', W - M - 4, y + 8, { align: 'right' });
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(inv.id, W - M - 4, y + 14, { align: 'right' });
+  doc.text(inv.date, W - M - 4, y + 19, { align: 'right' });
+
+  y += 24;
+
+  // ── BILL TO + SUMMARY ROW ────────────────────────────────────────────────────
+  const colW = (W - M * 2) / 2 - 3;
+
+  // Bill-To box
+  doc.setFillColor(244, 244, 250);
+  doc.rect(M, y, colW, 24, 'F');
+  doc.setTextColor(100, 100, 130);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.text('BILL TO', M + 3, y + 5);
+  doc.setTextColor(17, 17, 17);
+  doc.setFontSize(11);
+  doc.text(inv.shopName, M + 3, y + 11);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  let shopY = y + 17;
+  if (shop.owner) { doc.text(shop.owner, M + 3, shopY); shopY += 5; }
+  if (inv.area || shop.area) doc.text(inv.area || shop.area, M + 3, shopY);
+  if (shop.contact) {
+    doc.setTextColor(100, 100, 130);
+    doc.text('Tel: ' + shop.contact, M + 3, shopY + 5);
+  }
+
+  // Invoice detail box (right)
+  const rx = M + colW + 6;
+  doc.setFillColor(244, 244, 250);
+  doc.rect(rx, y, colW, 24, 'F');
+  doc.setTextColor(100, 100, 130);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.text('INVOICE DETAILS', rx + 3, y + 5);
+  doc.setTextColor(17, 17, 17);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('Ref:   ' + inv.id, rx + 3, y + 11);
+  doc.text('Date:  ' + inv.date, rx + 3, y + 17);
+  doc.text('Items: ' + inv.items.length, rx + 3, y + 22);
+
+  // Status badge + amount (far right inside detail box)
+  const statusColors = { PAID: [16, 185, 129], PARTIAL: [245, 158, 11], UNPAID: [239, 68, 68] };
+  const [sr, sg, sb] = statusColors[stat] || [100, 100, 100];
+  doc.setFillColor(sr, sg, sb);
+  doc.roundedRect(rx + colW - 32, y + 3, 29, 8, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text(stat, rx + colW - 17.5, y + 8.5, { align: 'center' });
+
+  // Total amount
+  doc.setTextColor(99, 102, 241);
+  doc.setFontSize(13);
+  doc.text(money(inv.finalTotal), rx + colW - 3, y + 21, { align: 'right' });
+
+  y += 28;
+
+  // Bank notice
+  if (biz.bank) {
+    doc.setFillColor(255, 243, 205);
+    doc.rect(M, y, W - M * 2, 7, 'F');
+    doc.setTextColor(120, 90, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('Payments: ' + biz.bank, (W) / 2, y + 4.8, { align: 'center' });
+    y += 10;
+  }
+
+  if (biz.tin) {
+    doc.setTextColor(100, 100, 130);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text('TIN: ' + biz.tin, W - M, y, { align: 'right' });
+    y += 4;
+  }
+
+  // ── ITEMS TABLE ─────────────────────────────────────────────────────────────
+  doc.autoTable({
+    startY: y,
+    head: [['#', 'Item Description', 'Pack', 'Qty', 'Unit Price', 'Ext. Price', 'Tax']],
+    body: inv.items.map((it, idx) => [
+      idx + 1,
+      it.itemName + (it.category ? '\n(' + it.category + ')' : ''),
+      tierLabel(it.priceType),
+      it.quantity,
+      money(it.unitPrice),
+      money(saleBaseTotal(it)),
+      it.gstInclusive ? 'Incl.' : '+8%'
+    ]),
+    margin: { left: M, right: M },
+    headStyles: {
+      fillColor: [17, 17, 17],
+      textColor: [255, 255, 255],
+      fontSize: 8,
+      fontStyle: 'bold',
+      cellPadding: { top: 4, bottom: 4, left: 3, right: 3 }
+    },
+    bodyStyles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [30, 30, 40] },
+    alternateRowStyles: { fillColor: [248, 248, 252] },
+    columnStyles: {
+      0: { cellWidth: 8,  halign: 'center' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 12, halign: 'center' },
+      4: { cellWidth: 28, halign: 'right' },
+      5: { cellWidth: 28, halign: 'right' },
+      6: { cellWidth: 16, halign: 'center' }
+    },
+    styles: { lineColor: [220, 220, 235], lineWidth: 0.15 }
+  });
+
+  y = doc.lastAutoTable.finalY + 5;
+
+  // ── TOTALS BOX ──────────────────────────────────────────────────────────────
+  const totW = 76, totX = W - M - totW;
+
+  doc.setFillColor(248, 248, 252);
+  doc.setDrawColor(220, 220, 235);
+  doc.rect(totX, y, totW, 8, 'FD');
+  doc.setTextColor(100, 100, 130);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('Subtotal (ex-GST):', totX + 3, y + 5.5);
+  doc.setTextColor(17, 17, 17);
+  doc.text(money(base), totX + totW - 3, y + 5.5, { align: 'right' });
+  y += 8;
+
+  doc.setFillColor(245, 243, 255);
+  doc.rect(totX, y, totW, 8, 'FD');
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text('GST @ 8%:', totX + 3, y + 5.5);
+  doc.text('+ ' + money(gstTot), totX + totW - 3, y + 5.5, { align: 'right' });
+  y += 8;
+
+  doc.setFillColor(17, 17, 17);
+  doc.rect(totX, y, totW, 11, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text('RECEIPT TOTAL:', totX + 3, y + 7);
+  doc.text(money(inv.finalTotal), totX + totW - 3, y + 7, { align: 'right' });
+  y += 15;
+
+  if (inv.paid > 0 && stat !== 'PAID') {
+    doc.setTextColor(245, 158, 11);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text('Balance Due: ' + money(inv.finalTotal - inv.paid), totX + totW - 3, y, { align: 'right' });
+    y += 8;
+  }
+
+  // ── SIGNATURE SECTION ───────────────────────────────────────────────────────
+  doc.setDrawColor(210, 210, 220);
+  doc.line(M, y, W - M, y);
+  y += 5;
+
+  const sigW = (W - M * 2 - 6) / 2;
+  const sigH = 26;
+  const sigLines = [
+    ['DELIVERED BY', ['Name & Phone No: ..................................', 'Date: ............. Signature: .....................', 'Packages Delivered: ...............................']],
+    ['RECEIVED IN GOOD CONDITION', ['Location / ID / Name & Phone: ...................', 'Date: .............. Signature: ....................', 'Packages Received: ................................']]
+  ];
+  sigLines.forEach(([title, lines], i) => {
+    const sx = M + i * (sigW + 6);
+    doc.setFillColor(250, 250, 253);
+    doc.rect(sx, y, sigW, sigH, 'F');
+    doc.setTextColor(17, 17, 17);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.text(title, sx + 3, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 130);
+    lines.forEach((l, li) => doc.text(l, sx + 3, y + 10 + li * 5.5));
+  });
+
+  y += sigH + 5;
+
+  // ── FOOTER NOTICE ────────────────────────────────────────────────────────────
+  doc.setDrawColor(210, 210, 220);
+  doc.line(M, y, W - M, y);
+  y += 4;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(140, 140, 160);
+  doc.text('Notice must be given of any goods not received, damaged or short within 48 hours from delivery date.', W / 2, y, { align: 'center' });
+  doc.text('Complaints accepted only in writing. Invoice assumed correct if no discrepancy notified within the stated period.', W / 2, y + 4.5, { align: 'center' });
+
+  // Page count
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 180);
+    doc.text('Page ' + p + ' of ' + pages, W - M, 290, { align: 'right' });
+  }
+
+  const fname = 'Invoice-' + (inv.id || 'draft').replace(/[^a-z0-9]/gi, '-') + '-' + inv.date + '.pdf';
+  doc.save(fname);
+  showToast('✓ PDF saved — ' + fname);
 }
