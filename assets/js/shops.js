@@ -143,7 +143,7 @@ function filterShops() {
       '<div style="font-size:10px;color:var(--t3)">' + ss.length + ' orders</div></div></div>' +
       (!shopsMassMode ? '<div style="display:flex;gap:6px;margin-top:10px">' +
         (STATE.isAgent || STATE.isAdmin ? '<button class="btn bp" style="flex:1;height:36px;font-size:12px" onclick="event.stopPropagation();openCheckin(\'' + shop.id + '\')">📍 Check In</button>' : '') +
-        (!shop.lat && !shop.lng && STATE.isAdmin ? '<button class="btn" style="flex:1;height:36px;font-size:12px;background:var(--as);color:var(--a);border-radius:var(--rs)" onclick="event.stopPropagation();openPinDropModal(\'' + shop.id + '\')">📍 Set Location</button>' : '') +
+        (STATE.isAdmin ? '<button class="btn" style="flex:1;height:36px;font-size:12px;background:var(--as);color:var(--a);border-radius:var(--rs)" onclick="event.stopPropagation();openPinDropModal(\'' + shop.id + '\')">' + (shop.lat&&shop.lng?'📍 Re-pin':'📍 Set Location') + '</button>' : '') +
         '<button class="btn bs" style="flex:1;height:36px;font-size:12px" onclick="event.stopPropagation();openShopModal(\'' + shop.id + '\')">' + IC.edit + ' Edit</button>' +
         (STATE.isAdmin ? '<button class="btn bd" style="flex:1;height:36px;font-size:12px" onclick="event.stopPropagation();delShop(\'' + shop.id + '\')">' + IC.trash + '</button>' : '') +
       '</div>' : '') +
@@ -236,7 +236,7 @@ function renderShopModal(id) {
     '<div style="background:var(--s2);border-radius:var(--rm);padding:12px">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
         '<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">📍 Location</div>' +
-        (hasCoords ? '<a href="https://maps.google.com/?q=' + (shop.lat||'') + ',' + (shop.lng||'') + '" target="_blank" style="font-size:11px;color:var(--a);text-decoration:none">View on map ↗</a>' : '') +
+        (hasCoords ? '<a href="https://maps.google.com/?q=' + lat + ',' + lng + '" target="_blank" style="font-size:11px;color:var(--a);text-decoration:none">View on map ↗</a>' : '') +
       '</div>' +
       // Hidden lat/lng fields — set by pin drop or GPS
       '<input type="hidden" id="sm-lat" value="' + (lat||'') + '">' +
@@ -262,14 +262,24 @@ function renderShopModal(id) {
 let _pinDropMap=null, _pinDropMarker=null, _pinDropLat=null, _pinDropLng=null;
 
 function openPinDropModal(shopId) {
-  // Save current form values so they survive the modal switch
-  const saved = {
-    name:  (document.getElementById('sm-name')||{}).value||'',
-    owner: (document.getElementById('sm-owner')||{}).value||'',
-    contact:(document.getElementById('sm-contact')||{}).value||'',
-    area:  (document.getElementById('sm-area')||{}).value||'',
-    priority:(document.getElementById('sm-priority')||{}).value||'Medium',
-    notes: (document.getElementById('sm-notes')||{}).value||'',
+  // If called from inside the shop form modal, save current form values
+  // so they survive the modal switch; otherwise fall back to shop data
+  const nameEl = document.getElementById('sm-name');
+  const shopData = shopId ? STATE.shops.find(s=>s.id===shopId) : null;
+  const saved = nameEl ? {
+    name:     nameEl.value||'',
+    owner:    (document.getElementById('sm-owner')||{}).value||'',
+    contact:  (document.getElementById('sm-contact')||{}).value||'',
+    area:     (document.getElementById('sm-area')||{}).value||'',
+    priority: (document.getElementById('sm-priority')||{}).value||'Medium',
+    notes:    (document.getElementById('sm-notes')||{}).value||'',
+  } : {
+    name:     shopData?.name||'',
+    owner:    shopData?.owner||'',
+    contact:  shopData?.contact||'',
+    area:     shopData?.area||'',
+    priority: shopData?.priority||'Medium',
+    notes:    shopData?.notes||'',
   };
   window._pinDropShopId = shopId;
   STATE.modal = {type:'pindrop', data:{shopId, saved}};

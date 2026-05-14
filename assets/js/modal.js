@@ -50,7 +50,9 @@ function bindModal() {
   if(STATE.modal?.type==='checkin') setTimeout(()=>bindCheckinModal(STATE.modal.data?.shopId), 100);
   if(STATE.modal?.type==='shop') {
     const shop = STATE.modal.data?.id ? STATE.shops.find(s=>s.id===STATE.modal.data.id) : null;
-    if(shop?.lat && shop?.lng) setTimeout(()=>renderShopLocationPreview(shop.lat, shop.lng), 200);
+    const previewLat = STATE.modal.data?.lat ?? shop?.lat;
+    const previewLng = STATE.modal.data?.lng ?? shop?.lng;
+    if(previewLat && previewLng) setTimeout(()=>renderShopLocationPreview(previewLat, previewLng), 200);
   }
   if(STATE.modal?.type==='item') { updateTiers(); initItemModalScroll(); }
   if(STATE.modal?.type==='scan') bindScanModal();

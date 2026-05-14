@@ -21,7 +21,11 @@ function captureShopLocation() {
     const lat=document.getElementById('sm-lat'), lng=document.getElementById('sm-lng');
     if(lat) lat.value=pos.coords.latitude.toFixed(6);
     if(lng) lng.value=pos.coords.longitude.toFixed(6);
-    if(btn){btn.textContent='✓ Location set';btn.disabled=false;}
+    if(btn){btn.textContent='✓ GPS set';btn.disabled=false;}
+    const st=document.getElementById('sm-loc-status');
+    if(st){st.textContent='✓ Location set: '+pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4);st.style.color='var(--ok)';}
+    const preview=document.getElementById('shop-loc-preview');
+    if(preview) preview.style.display='block';
     showToast('✓ '+pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4));
     // Mini preview map
     setTimeout(()=>renderShopLocationPreview(pos.coords.latitude,pos.coords.longitude),200);
