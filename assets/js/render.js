@@ -52,11 +52,7 @@ function renderDesktopShell() {
   const biz = db.get('bizProfile',{name:'H2 Line'});
   const sidebar = '<div id="ds">' +
     '<div id="ds-logo">' +
-      '<img src="'+LOGO_ICON+'" style="width:28px;height:28px;border-radius:6px;object-fit:contain;background:#fff" alt="H2">' +
-      '<div>' +
-        '<div style="font-family:Outfit,sans-serif;font-size:15px;font-weight:800;color:var(--a);line-height:1">' + (biz.name||'H2 Line') + '</div>' +
-        '<div style="font-size:10px;color:var(--t3);margin-top:1px">Distribution</div>' +
-      '</div>' +
+      '<img src="'+LOGO_AUTH+'" style="height:38px;width:auto;object-fit:contain;max-width:110px" alt="H2 Line">' +
     '</div>' +
     '<div id="ds-nav">' +
     navGroups.map(g =>

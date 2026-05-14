@@ -154,7 +154,7 @@ function renderTopBar() {
   const syncPending = db.get('syncPending', false);
   const syncDot = STATE.isAdmin ? '<div title="' + (syncPending ? 'Pending sync — will upload when online' : 'Synced to cloud') + '" style="width:7px;height:7px;border-radius:50%;background:' + (syncPending ? 'var(--warn)' : 'var(--ok)') + ';flex-shrink:0;' + (syncPending ? 'animation:pulse 2s infinite' : '') + '"></div>' : '';
   return '<div id="topbar">' +
-    '<div style="font-family:Outfit,sans-serif;font-weight:800;font-size:18px;color:var(--a)">H2 Line</div>' +
+    '<img src="'+LOGO_AUTH+'" style="height:28px;width:auto;object-fit:contain;max-width:90px" alt="H2 Line">' +
     '<div style="width:1px;height:14px;background:var(--b)"></div>' +
     '<div style="font-size:13px;color:var(--t2);font-weight:500;flex:1;display:flex;align-items:center;gap:6px">' + (labels[STATE.page]||STATE.page) + syncDot + '</div>' +
     shareBtn +
