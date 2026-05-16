@@ -1,25 +1,97 @@
 'use strict';
 // ── RENDER + NAV + ROUTER ─────────────────────────────────────────────────
-// ── RENDER ──────────────────────────────────────────────────────────────────
 const isDesktop = () => window.innerWidth >= 900;
 
+// ── PARTIAL-RENDER HELPERS ────────────────────────────────────────────────
+// Sync only the modal overlay — add/replace/remove without touching the rest
+function _syncModal(root) {
+  const existing = document.getElementById('modal-overlay');
+  if (STATE.modal) {
+    if (existing) { existing.outerHTML = renderModal(); }
+    else { root.insertAdjacentHTML('beforeend', renderModal()); }
+  } else if (existing) { existing.remove(); }
+}
+
+// Desktop: keep sidebar (#ds) stable, replace only the main content area (#dm)
+function _patchDesktop(root) {
+  // Recompute badge counts and sync sidebar state without DOM replacement
+  const imap = {};
+  STATE.sales.forEach(s => { const k = s.invoiceId||(s.shopName+'-'+s.date); if(!imap[k]) imap[k]={f:0,p:0}; imap[k].f += saleFinalTotal(s); if(s.paymentStatus==='Paid') imap[k].p += saleFinalTotal(s); });
+  const pendingCnt = Object.values(imap).filter(i => i.p < i.f && i.f > 0).length;
+  const alertsCnt  = getAlerts().filter(a => !a.done && a.dueDate && a.dueDate <= new Date().toISOString().split('T')[0]).length;
+  document.querySelectorAll('#ds-nav .snb').forEach(b => {
+    const m = (b.getAttribute('onclick')||'').match(/goPage\('(\w+)'\)/);
+    const pg = m && m[1];
+    b.classList.toggle('on', pg === STATE.page);
+    if (!pg) return;
+    const cnt = pg === 'pending' ? pendingCnt : pg === 'alerts' ? alertsCnt : 0;
+    let badge = b.querySelector('.snb-badge');
+    if (cnt > 0) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'snb-badge'; b.appendChild(badge); }
+      badge.textContent = cnt;
+    } else if (badge) { badge.remove(); }
+  });
+  // Replace main area (header + content) — sidebar never touched
+  const dm = document.getElementById('dm');
+  if (!dm) { root.innerHTML = renderDesktopShell(); return; }
+  dm.innerHTML = renderDesktopHeader() + '<div id="content" class="page-in">' + renderPage() + '</div>';
+  // Sync FAB
+  const showFab = !STATE.isViewer && !['settings','importexport'].includes(STATE.page);
+  const fab = document.getElementById('fab');
+  if (showFab && !fab) root.insertAdjacentHTML('beforeend', '<button id="fab" onclick="openAddSale()">' + IC.plus + '</button>');
+  else if (!showFab && fab) fab.remove();
+  _syncModal(root);
+}
+
+// Mobile: replace topbar + nav (small, no visible flash) and content only
+function _patchMobile(root) {
+  const topbar = document.getElementById('topbar');
+  if (topbar) topbar.outerHTML = renderTopBar();
+  const nav = document.getElementById('bottomnav');
+  if (nav) nav.outerHTML = renderNav();
+  const content = document.getElementById('content');
+  if (content) content.innerHTML = renderPage();
+  _syncModal(root);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
 function render() {
   const root = document.getElementById('app');
   if (!root) return;
   document.body.className = STATE.dark ? 'dark' : 'light';
   if (!STATE.user) { root.innerHTML = renderAuth(); bindAuth(); return; }
   if (isDesktop()) {
-    root.innerHTML = renderDesktopShell();
+    if (document.getElementById('ds')) { _patchDesktop(root); }
+    else { root.innerHTML = renderDesktopShell(); }
   } else {
-    const viewerFab = STATE.isViewer ? '' : renderFab();
-    root.innerHTML = renderTopBar() + '<div id="content" class="page-in">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
+    if (!document.getElementById('ds') && document.getElementById('bottomnav')) { _patchMobile(root); }
+    else {
+      const viewerFab = STATE.isViewer ? '' : renderFab();
+      root.innerHTML = renderTopBar() + '<div id="content" class="page-in">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
+    }
   }
   bindPage();
   if (STATE.modal) bindModal();
 }
 
-function renderDesktopShell() {
+function renderDesktopHeader() {
   const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',agents:'Agents',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts'};
+  const tot  = STATE.sales.reduce((a,r) => a + saleFinalTotal(r), 0);
+  const pend = STATE.sales.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + saleFinalTotal(r), 0);
+  const pageLabel = labels[STATE.page] || STATE.page;
+  return '<div id="dm-header">' +
+    '<h2>' + pageLabel + '</h2>' +
+    '<div style="display:flex;align-items:center;gap:8px">' +
+      '<div style="font-size:11px;color:var(--t2)">Total: <span style="font-weight:700;color:var(--a)">' + money(tot) + '</span></div>' +
+      '<div style="width:1px;height:12px;background:var(--b)"></div>' +
+      '<div style="font-size:11px;color:var(--t2)">Pending: <span style="font-weight:700;color:var(--warn)">' + money(pend) + '</span></div>' +
+      '<div style="width:1px;height:12px;background:var(--b)"></div>' +
+      '<div style="font-size:11px;color:var(--t3)">' + new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderDesktopShell() {
   const pendingCount = (() => {
     const imap={};
     STATE.sales.forEach(s=>{const k=s.invoiceId||(s.shopName+'-'+s.date);if(!imap[k])imap[k]={f:0,p:0};imap[k].f+=saleFinalTotal(s);if(s.paymentStatus==='Paid')imap[k].p+=saleFinalTotal(s);});
@@ -81,22 +153,7 @@ function renderDesktopShell() {
     '</div>' +
   '</div>';
 
-  const pageLabel = labels[STATE.page] || STATE.page;
-  const header = '<div id="dm-header">' +
-    '<h2>' + pageLabel + '</h2>' +
-    '<div style="display:flex;align-items:center;gap:8px">' +
-      // Quick stats in header
-      (() => {
-        const tot = STATE.sales.reduce((a,r)=>a+saleFinalTotal(r),0);
-        const pend = STATE.sales.filter(r=>r.paymentStatus==='Pending').reduce((a,r)=>a+saleFinalTotal(r),0);
-        return '<div style="font-size:11px;color:var(--t2)">Total: <span style="font-weight:700;color:var(--a)">' + money(tot) + '</span></div>' +
-          '<div style="width:1px;height:12px;background:var(--b)"></div>' +
-          '<div style="font-size:11px;color:var(--t2)">Pending: <span style="font-weight:700;color:var(--warn)">' + money(pend) + '</span></div>';
-      })() +
-      '<div style="width:1px;height:12px;background:var(--b)"></div>' +
-      '<div style="font-size:11px;color:var(--t3)">' + new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) + '</div>' +
-    '</div>' +
-  '</div>';
+  const header = renderDesktopHeader();
 
   const fab = !STATE.isViewer && !['settings','importexport'].includes(STATE.page)
     ? '<button id="fab" onclick="openAddSale()">' + IC.plus + '</button>'

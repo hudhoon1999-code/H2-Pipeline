@@ -74,7 +74,7 @@ function renderCheckinModal(shopId) {
         return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b)">'+
           '<div style="width:28px;height:28px;border-radius:50%;background:var(--as);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--a);flex-shrink:0">'+(c.agentName||'?')[0].toUpperCase()+'</div>'+
           '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+(STATE.isAdmin?c.agentName+' · ':'')+when+(c.distanceM?' · '+c.distanceM+'m':'')+'</div>'+
-          (c.note?'<div style="font-size:11px;color:var(--t2);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">"'+c.note+'"</div>':'')+'</div>'+
+          (c.note?'<div style="font-size:11px;color:var(--t2);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">"'+esc(c.note)+'"</div>':'')+'</div>'+
           '<span style="background:var(--oks);color:var(--ok);padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700">✓</span></div>';
       }).join('')+
     '</div>':'');
@@ -273,7 +273,7 @@ function renderCheckinHistory(shopId) {
               '<div style="font-size:14px;font-weight:700">'+c.shopName+'</div>'+
               (STATE.isAdmin?'<div style="font-size:11px;color:var(--a);font-weight:600">'+(c.agentName||'Agent')+'</div>':'')+
               '<div style="font-size:11px;color:var(--t2)">'+time+(c.distanceM?' · '+c.distanceM+'m':'')+'</div>'+
-              (c.note?'<div style="font-size:12px;margin-top:6px;padding:6px 8px;background:var(--s2);border-radius:var(--rx);font-style:italic">"'+c.note+'"</div>':'')+
+              (c.note?'<div style="font-size:12px;margin-top:6px;padding:6px 8px;background:var(--s2);border-radius:var(--rx);font-style:italic">"'+esc(c.note)+'"</div>':'')+
             '</div>'+
             '<span style="background:var(--oks);color:var(--ok);padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;flex-shrink:0;margin-left:10px">✓</span>'+
           '</div>'+

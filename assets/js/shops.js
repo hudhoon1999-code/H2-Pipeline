@@ -178,9 +178,9 @@ function renderShopDetailModal(id) {
     '</div>' +
     // Contact info
     '<div style="background:var(--s2);border-radius:var(--rs);padding:12px;margin-bottom:14px;display:flex;flex-direction:column;gap:6px">' +
-      (shop.owner?'<div style="display:flex;gap:8px;align-items:center;font-size:13px">👤 <span style="font-weight:600">'+shop.owner+'</span></div>':'') +
-      (shop.contact?'<div style="display:flex;gap:8px;align-items:center;font-size:13px">📞 <a href="tel:'+shop.contact+'" style="color:var(--a);font-weight:600;text-decoration:none">'+shop.contact+'</a></div>':'') +
-      (shop.notes?'<div style="font-size:12px;color:var(--t2)">📝 '+shop.notes+'</div>':'') +
+      (shop.owner?'<div style="display:flex;gap:8px;align-items:center;font-size:13px">👤 <span style="font-weight:600">'+esc(shop.owner)+'</span></div>':'') +
+      (shop.contact?'<div style="display:flex;gap:8px;align-items:center;font-size:13px">📞 <a href="tel:'+esc(shop.contact)+'" style="color:var(--a);font-weight:600;text-decoration:none">'+esc(shop.contact)+'</a></div>':'') +
+      (shop.notes?'<div style="font-size:12px;color:var(--t2)">📝 '+esc(shop.notes)+'</div>':'') +
       '<div style="font-size:11px;color:var(--t3)">'+ss.length+' orders · Last: '+(lastSale?lastSale.date:'never')+'</div>' +
     '</div>' +
     // Recent invoices
@@ -202,7 +202,7 @@ function renderShopDetailModal(id) {
           return '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--b)">' +
             '<div style="width:28px;height:28px;border-radius:50%;background:var(--as);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--a);flex-shrink:0">'+(c.agentName||'?')[0].toUpperCase()+'</div>' +
             '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+(STATE.isAdmin?c.agentName+' · ':'')+when+(c.distanceM?' · '+c.distanceM+'m':'')+'</div>' +
-            (c.note?'<div style="font-size:11px;color:var(--t2);font-style:italic">"'+c.note+'"</div>':'')+'</div>' +
+            (c.note?'<div style="font-size:11px;color:var(--t2);font-style:italic">"'+esc(c.note)+'"</div>':'')+'</div>' +
             '<span style="background:var(--oks);color:var(--ok);padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700;flex-shrink:0">✓</span></div>';
         }).join('');
     })() +

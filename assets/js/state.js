@@ -130,3 +130,9 @@ function saveState() {
 
 // Admin email — used by firebase.js and auth.js
 const ADMIN_EMAIL = 'hudhoon1999@gmail.com';
+
+// HTML entity escaper — use on all user-controlled strings rendered into innerHTML
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
