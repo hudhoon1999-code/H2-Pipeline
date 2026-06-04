@@ -44,6 +44,7 @@ let STATE = {
   agentId: null,
   orgId: db.get('orgId', null),
   orgProfile: db.get('orgProfile', null),
+  superAdminViewMode: db.get('superAdminViewMode', 'platform'), // 'platform' | 'company' | 'agent'
 };
 
 STATE.sales = (STATE.sales || []).map(normalizeSaleGSTRow);
@@ -129,6 +130,18 @@ function saveState() {
   db.set('dark', STATE.dark);
   db.set('syncPending', true);
   if (window.saveToFirestore) window.saveToFirestore();
+}
+
+function setSuperAdminMode(mode) {
+  if (!STATE.isSuperAdmin) return;
+  STATE.superAdminViewMode = mode;
+  db.set('superAdminViewMode', mode);
+  if (mode === 'agent') { STATE.isAdmin = false; STATE.isAgent = true; }
+  else { STATE.isAdmin = true; STATE.isAgent = false; }
+  STATE.page = mode === 'platform' ? 'platform' : 'dashboard';
+  render();
+  const labels = {'platform':'⚡ Super Admin mode','company':'🏢 Company Admin mode','agent':'👤 Agent view'};
+  showToast(labels[mode] || 'Mode changed');
 }
 
 // ── ACTIVITY LOG ────────────────────────────────────────────────────────────

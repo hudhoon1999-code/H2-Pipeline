@@ -16,6 +16,8 @@ function renderModal() {
   else if(STATE.modal.type==='share') content=renderShareModal();
   else if(STATE.modal.type==='scan') content=renderScanModal();
   else if(STATE.modal.type==='alert') content=renderAlertModal(STATE.modal.data);
+  else if(STATE.modal.type==='newcompany') content=renderNewCompanyModal();
+  else if(STATE.modal.type==='addcompadmin') content=renderAddCompanyAdminModal(STATE.modal.data?.orgId, STATE.modal.data?.orgName);
   // Pin-drop needs full screen — different wrapper
   if (STATE.modal.type==='pindrop') {
     return '<div class="mov" id="modal-overlay"><div style="background:var(--s);width:100%;max-width:640px;height:100vh;max-height:100vh;overflow:hidden;display:flex;flex-direction:column;animation:slideUp .3s ease">' + content + '</div></div>';
@@ -452,4 +454,106 @@ function saveScanInvoice() {
   saveState();
   closeModal();
   showToast('✓ Saved ' + saved + ' items from invoice');
+}
+
+// ── NEW COMPANY MODAL ─────────────────────────────────────────────────────────
+function renderNewCompanyModal() {
+  return '<div class="mhan"></div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:18px">🏢</div>' +
+        '<div class="mtit" style="margin-bottom:0">New Company</div>' +
+      '</div>' +
+      '<button onclick="closeModal()" style="background:var(--s2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--t2);font-size:18px;display:flex;align-items:center;justify-content:center">&times;</button>' +
+    '</div>' +
+    '<div class="fg">' +
+      '<div class="iw"><label class="il">Company Name *</label><input id="nc-name" class="inp" placeholder="e.g. Al Farooq Trading"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        '<div class="iw"><label class="il">Plan</label><input id="nc-plan" class="inp" placeholder="e.g. Standard"></div>' +
+        '<div class="iw"><label class="il">Monthly Fee</label><input id="nc-fee" class="inp" type="number" min="0" placeholder="500"></div>' +
+      '</div>' +
+      '<div style="height:1px;background:var(--b);margin:4px 0 12px"></div>' +
+      '<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Admin Account</div>' +
+      '<div class="iw"><label class="il">Admin Full Name *</label><input id="nc-admin-name" class="inp" placeholder="e.g. Ahmed Mohamed"></div>' +
+      '<div class="iw"><label class="il">Admin Email *</label><input id="nc-admin-email" class="inp" type="email" placeholder="admin@company.com"></div>' +
+      '<div class="iw" style="position:relative"><label class="il">Admin Password *</label>' +
+        '<input id="nc-admin-pw" class="inp" type="password" placeholder="Minimum 6 characters" style="padding-right:44px">' +
+        '<button onclick="var f=document.getElementById(\'nc-admin-pw\');f.type=f.type===\'password\'?\'text\':\'password\'" style="position:absolute;right:8px;top:26px;background:none;border:none;cursor:pointer;color:var(--t3);padding:6px;font-size:16px">👁</button>' +
+      '</div>' +
+      '<div id="nc-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px"></div>' +
+      '<button id="nc-submit" class="btn bp bw" style="height:48px;font-size:14px;font-weight:700" onclick="doCreateNewCompany()">Create Company + Admin Account</button>' +
+    '</div>';
+}
+
+async function doCreateNewCompany() {
+  const name = ((document.getElementById('nc-name')||{}).value||'').trim();
+  const adminName = ((document.getElementById('nc-admin-name')||{}).value||'').trim();
+  const adminEmail = ((document.getElementById('nc-admin-email')||{}).value||'').trim();
+  const adminPw = (document.getElementById('nc-admin-pw')||{}).value||'';
+  const plan = ((document.getElementById('nc-plan')||{}).value||'').trim();
+  const fee = ((document.getElementById('nc-fee')||{}).value||'');
+  const msg = document.getElementById('nc-msg');
+  const btn = document.getElementById('nc-submit');
+  const showMsg = (m, ok=false) => { if(msg){ msg.style.display='block'; msg.style.background=ok?'var(--oks)':'var(--errs)'; msg.style.color=ok?'var(--ok)':'var(--err)'; msg.textContent=m; } };
+  if (!name||!adminName||!adminEmail||!adminPw) { showMsg('Fill all required fields (*)'); return; }
+  if (adminPw.length < 6) { showMsg('Password must be at least 6 characters'); return; }
+  if (btn) { btn.innerHTML='<span class="spin"></span> Creating…'; btn.disabled=true; }
+  if (!window.createCompanyWithAdmin) { showMsg('Firebase not ready — try again'); if(btn){btn.textContent='Create Company + Admin Account';btn.disabled=false;} return; }
+  const result = await window.createCompanyWithAdmin(name, adminName, adminEmail, adminPw, plan, fee);
+  if (result.success) {
+    if (_platformOrgs && result.orgId) {
+      _platformOrgs.push({id:result.orgId,name,status:'active',inviteCode:result.inviteCode,billing:{plan,monthlyFee:parseFloat(fee)||0},createdAt:{toDate:()=>new Date()},ownerId:result.adminUid});
+    }
+    showToast('✓ Company "'+name+'" created!');
+    closeModal();
+    loadPlatformOrgs();
+  } else {
+    showMsg(result.error||'Creation failed');
+    if (btn) { btn.textContent='Create Company + Admin Account'; btn.disabled=false; }
+  }
+}
+
+// ── ADD COMPANY ADMIN MODAL ───────────────────────────────────────────────────
+function renderAddCompanyAdminModal(orgId, orgName) {
+  return '<div class="mhan"></div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--a),var(--gst));display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>' +
+        '<div><div class="mtit" style="margin-bottom:0">Add Admin Account</div>' +
+        '<div style="font-size:11px;color:var(--t2)">for '+esc(orgName||'company')+'</div></div>' +
+      '</div>' +
+      '<button onclick="closeModal()" style="background:var(--s2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--t2);font-size:18px;display:flex;align-items:center;justify-content:center">&times;</button>' +
+    '</div>' +
+    '<div class="fg">' +
+      '<div class="iw"><label class="il">Full Name *</label><input id="ca-name" class="inp" placeholder="e.g. Sara Ahmed"></div>' +
+      '<div class="iw"><label class="il">Email *</label><input id="ca-email" class="inp" type="email" placeholder="admin@company.com"></div>' +
+      '<div class="iw" style="position:relative"><label class="il">Password *</label>' +
+        '<input id="ca-pw" class="inp" type="password" placeholder="Minimum 6 characters" style="padding-right:44px">' +
+        '<button onclick="var f=document.getElementById(\'ca-pw\');f.type=f.type===\'password\'?\'text\':\'password\'" style="position:absolute;right:8px;top:26px;background:none;border:none;cursor:pointer;color:var(--t3);padding:6px;font-size:16px">👁</button>' +
+      '</div>' +
+      '<div id="ca-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px"></div>' +
+      '<button id="ca-submit" class="btn bp bw" style="height:48px;font-size:14px;font-weight:700" onclick="doAddCompanyAdmin(\''+esc(orgId||'')+'\')">Create Admin Account</button>' +
+    '</div>';
+}
+
+async function doAddCompanyAdmin(orgId) {
+  const name = ((document.getElementById('ca-name')||{}).value||'').trim();
+  const email = ((document.getElementById('ca-email')||{}).value||'').trim();
+  const pw = (document.getElementById('ca-pw')||{}).value||'';
+  const msg = document.getElementById('ca-msg');
+  const btn = document.getElementById('ca-submit');
+  const showMsg = (m, ok=false) => { if(msg){ msg.style.display='block'; msg.style.background=ok?'var(--oks)':'var(--errs)'; msg.style.color=ok?'var(--ok)':'var(--err)'; msg.textContent=m; } };
+  if (!name||!email||!pw) { showMsg('Fill all required fields'); return; }
+  if (pw.length < 6) { showMsg('Password must be at least 6 characters'); return; }
+  if (btn) { btn.innerHTML='<span class="spin"></span> Creating…'; btn.disabled=true; }
+  if (!window.createCompanyAdminAccount) { showMsg('Firebase not ready — try again'); if(btn){btn.textContent='Create Admin Account';btn.disabled=false;} return; }
+  const result = await window.createCompanyAdminAccount(orgId, name, email, pw);
+  if (result.success) {
+    showToast('✓ Admin account created for '+email);
+    closeModal();
+    if(typeof loadPlatformMembers==='function') loadPlatformMembers(orgId);
+  } else {
+    showMsg(result.error||'Failed to create account');
+    if (btn) { btn.textContent='Create Admin Account'; btn.disabled=false; }
+  }
 }

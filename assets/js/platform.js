@@ -46,10 +46,16 @@ function renderPlatformPage() {
   const revenue   = cos.filter(o => o.status!=='suspended'&&o.status!=='cancelled').reduce((s,o)=>s+(parseFloat(o.billing?.monthlyFee)||0),0);
 
   return '<div class="fu">' +
+    // Mode switcher
+    '<div style="display:flex;gap:6px;margin-bottom:16px;background:var(--s2);padding:5px;border-radius:10px">' +
+      '<button class="chip on" style="flex:1;font-size:11px;font-weight:700" onclick="setSuperAdminMode(\'platform\')">⚡ Platform</button>' +
+      '<button class="chip" style="flex:1;font-size:11px" onclick="setSuperAdminMode(\'company\')">🏢 Admin</button>' +
+      '<button class="chip" style="flex:1;font-size:11px" onclick="setSuperAdminMode(\'agent\')">👤 Agent</button>' +
+    '</div>' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">' +
       '<div><h1 style="font-size:22px;font-weight:800">Platform Admin</h1>' +
-      '<div style="font-size:12px;color:var(--t2)">'+cos.length+' customer organization'+(cos.length!==1?'s':'')+' · only visible to you</div></div>' +
-      '<div style="padding:8px 12px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-size:11px;font-weight:700">⚡ Super Admin</div>' +
+      '<div style="font-size:12px;color:var(--t2)">'+cos.length+' organization'+(cos.length!==1?'s':'')+' · only visible to you</div></div>' +
+      '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="STATE.modal={type:\'newcompany\'};render()">+ New Company</button>' +
     '</div>' +
 
     // Revenue + stats
@@ -190,7 +196,8 @@ function _renderPlatformDetail(orgId) {
         (isSuspended
           ? '<button class="btn" style="background:var(--oks);color:var(--ok);font-weight:700;flex:1;height:40px;font-size:13px" onclick="unsuspendOrg(\''+org.id+'\',\''+esc(org.name||'Unnamed')+'\')">✓ Restore Access</button>'
           : '<button class="btn" style="background:var(--errs);color:var(--err);font-weight:700;flex:1;height:40px;font-size:13px" onclick="suspendOrg(\''+org.id+'\',\''+esc(org.name||'Unnamed')+'\')">🚫 Suspend Access</button>') +
-        '<button class="btn bs" style="flex:1;height:40px;font-size:13px" onclick="loadPlatformMembers(\''+org.id+'\')">👥 View Members</button>' +
+        '<button class="btn bs" style="flex:1;height:40px;font-size:13px" onclick="loadPlatformMembers(\''+org.id+'\')">👥 Members</button>' +
+        '<button class="btn" style="background:var(--as);color:var(--a);font-weight:700;flex:1;height:40px;font-size:13px" onclick="openAddCompanyAdminModal(\''+org.id+'\')">+ Admin</button>' +
       '</div>' +
     '</div>' +
 
@@ -390,4 +397,10 @@ async function unsuspendOrg(orgId, orgName) {
     showToast('✓ "'+orgName+'" access restored');
     if(_platformDetail){ _platformDetail=orgId; render(); } else { const el=document.getElementById('platform-orgs'); if(el) el.innerHTML=_renderOrgList(); }
   } catch(e){ showToast('⚠️ '+e.message); }
+}
+
+function openAddCompanyAdminModal(orgId) {
+  const org = _platformOrgs.find(o => o.id === orgId);
+  STATE.modal = {type:'addcompadmin', data:{orgId, orgName: org?.name || 'Company'}};
+  render();
 }

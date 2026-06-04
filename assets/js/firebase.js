@@ -86,9 +86,14 @@ async function initFirebase() {
     const pw=(document.getElementById('a-pw')||{}).value||'';
     const sub=document.getElementById('a-submit');
     if(!email||!pw){ if(sub){sub.textContent='Log In';sub.disabled=false;} showAuthMsg('Enter email and password'); return; }
-    try { await _fbAuth.signInWithEmailAndPassword(email,pw); }
+    try {
+      const loginPromise=_fbAuth.signInWithEmailAndPassword(email,pw);
+      const timeoutPromise=new Promise((_,rj)=>setTimeout(()=>rj(new Error('Login timed out — check your connection and try again')),20000));
+      await Promise.race([loginPromise,timeoutPromise]);
+    }
     catch(e) {
-      if(sub){sub.textContent='Log In';sub.disabled=false;}
+      const s=document.getElementById('a-submit');
+      if(s){s.textContent='Log In';s.disabled=false;}
       let msg=e.message||'Login failed';
       if(['auth/invalid-credential','auth/wrong-password','auth/user-not-found'].includes(e.code)) msg='Wrong email or password';
       else if(e.code==='auth/unauthorized-domain') msg='Add '+window.location.hostname+' to Firebase Console → Auth → Authorized Domains';
@@ -172,6 +177,49 @@ async function initFirebase() {
     }
   };
 
+  // ── CREATE NEW COMPANY + ADMIN (super admin only) ─────────────────────────
+  window.createCompanyWithAdmin = async function(companyName, adminName, adminEmail, adminPassword, plan, fee) {
+    if(!STATE.isSuperAdmin||!_fbDb) return {success:false,error:'Not authorized'};
+    let secondaryApp;
+    try {
+      secondaryApp=firebase.apps.find(a=>a.name==='h2secondary')||firebase.initializeApp(_fbConfig,'h2secondary');
+      const secAuth=secondaryApp.auth();
+      const cred=await secAuth.createUserWithEmailAndPassword(adminEmail,adminPassword);
+      await cred.user.updateProfile({displayName:adminName});
+      const adminUid=cred.user.uid;
+      const orgRef=_fbDb.collection('orgs').doc();
+      const orgId=orgRef.id;
+      const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();
+      await orgRef.set({name:companyName,ownerId:adminUid,inviteCode,status:'active',billing:{plan:plan||'',monthlyFee:parseFloat(fee)||0},createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await orgRef.collection('appdata').doc('main').set({sales:[],items:[],shops:[],agents:[],targets:[],checkins:[],currency:'MVR',activityLog:[],updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await _fbDb.collection('users').doc(adminUid).set({name:adminName,email:adminEmail,role:'admin',orgId,approved:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await secAuth.signOut();
+      return {success:true,orgId,adminUid,inviteCode};
+    } catch(e) {
+      try{ if(secondaryApp) await secondaryApp.auth().signOut(); } catch(_){}
+      return {success:false,error:e.code==='auth/email-already-in-use'?'Email already registered':e.code==='auth/weak-password'?'Password too weak (min 6 chars)':e.message||'Failed'};
+    }
+  };
+
+  // ── ADD ADMIN TO EXISTING COMPANY (super admin only) ──────────────────────
+  window.createCompanyAdminAccount = async function(orgId, name, email, password) {
+    if(!STATE.isSuperAdmin||!_fbDb) return {success:false,error:'Not authorized'};
+    let secondaryApp;
+    try {
+      secondaryApp=firebase.apps.find(a=>a.name==='h2secondary')||firebase.initializeApp(_fbConfig,'h2secondary');
+      const secAuth=secondaryApp.auth();
+      const cred=await secAuth.createUserWithEmailAndPassword(email,password);
+      await cred.user.updateProfile({displayName:name});
+      const newUid=cred.user.uid;
+      await _fbDb.collection('users').doc(newUid).set({name,email,role:'admin',orgId,approved:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await secAuth.signOut();
+      return {success:true,uid:newUid};
+    } catch(e) {
+      try{ if(secondaryApp) await secondaryApp.auth().signOut(); } catch(_){}
+      return {success:false,error:e.code==='auth/email-already-in-use'?'Email already registered':e.code==='auth/weak-password'?'Password too weak (min 6 chars)':e.message||'Failed'};
+    }
+  };
+
   // ── JOIN ORG WITH INVITE CODE ─────────────────────────────────────────────
   window.joinOrgWithCode = async function(code) {
     try {
@@ -194,7 +242,7 @@ async function initFirebase() {
   };
 
   // ── AUTH STATE CHANGE ─────────────────────────────────────────────────────
-  const authTimeout=setTimeout(()=>{ if(!STATE.user) render(); },8000);
+  const authTimeout=setTimeout(()=>{ if(!STATE.user) render(); },5000);
   _fbAuth.onAuthStateChanged(async fbUser => {
     clearTimeout(authTimeout); _teardownSnapshot();
     if(fbUser) {
@@ -207,11 +255,19 @@ async function initFirebase() {
         else if(isSuperAdmin) await _fbDb.collection('users').doc(fbUser.uid).set({name:STATE.user.name,email:fbUser.email,role:'admin',approved:true});
       } catch(e){ console.warn('Profile:',e.message); }
       const orgId=await _resolveOrg(fbUser);
-      if(!orgId){ render(); return; }
-      await _loadOrgData();
-      if(!STATE.isAdmin){ const a=STATE.agents.find(a=>a.uid===fbUser.uid||a.email===fbUser.email); if(a){STATE.agentId=a.id;STATE.user.name=a.name||STATE.user.name;} }
-      setTimeout(()=>{ showToast('👋 Welcome back, '+(STATE.user.name||'there')+'!'); logActivity('login',(STATE.user.name||'User')+' logged in'); },600);
-      _setupOrgSnapshot(fbUser); render();
+      if(!orgId&&!isSuperAdmin){ render(); return; }
+      if(orgId) await _loadOrgData();
+      if(!STATE.isAdmin&&!isSuperAdmin){ const a=STATE.agents.find(a=>a.uid===fbUser.uid||a.email===fbUser.email); if(a){STATE.agentId=a.id;STATE.user.name=a.name||STATE.user.name;} }
+      // Apply saved super admin view mode
+      if(isSuperAdmin){
+        const savedMode=db.get('superAdminViewMode','platform');
+        STATE.superAdminViewMode=savedMode;
+        if(savedMode==='agent'){ STATE.isAdmin=false; STATE.isAgent=true; }
+        else { STATE.isAdmin=true; STATE.isAgent=false; }
+        if(savedMode==='platform') STATE.page='platform';
+      }
+      setTimeout(()=>{ showToast('👋 Welcome back, '+(STATE.user.name||'there')+'!'); if(orgId) logActivity('login',(STATE.user.name||'User')+' logged in'); },600);
+      if(orgId) _setupOrgSnapshot(fbUser); render();
     } else {
       STATE.user=null; STATE.isAdmin=false; STATE.isAgent=false; STATE.isSuperAdmin=false; STATE.agentId=null;
       STATE.orgId=null; STATE.orgProfile=null; render();

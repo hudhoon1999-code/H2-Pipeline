@@ -77,7 +77,7 @@ function render() {
   if (!root) return;
   document.body.className = STATE.dark ? 'dark' : 'light';
   if (!STATE.user) { _lastRenderedPage = null; root.innerHTML = renderAuth(); bindAuth(); return; }
-  if (!STATE.orgId && window._fbDb) { _lastRenderedPage = null; root.innerHTML = renderOrgSetup(); return; }
+  if (!STATE.orgId && window._fbDb && !STATE.isSuperAdmin) { _lastRenderedPage = null; root.innerHTML = renderOrgSetup(); return; }
   if (STATE.orgProfile?.status === 'suspended' && !STATE.isSuperAdmin) { _lastRenderedPage = null; root.innerHTML = renderSuspended(); return; }
   if (isDesktop()) {
     if (document.getElementById('ds')) { _patchDesktop(root); }
@@ -163,16 +163,24 @@ function renderDesktopShell() {
     ).join('') +
     '</div>' +
     '<div id="ds-footer">' +
+      (STATE.isSuperAdmin ? '<div style="background:linear-gradient(135deg,#6366F1,#8B5CF6);border-radius:8px;padding:6px;margin-bottom:8px">' +
+        '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;padding:0 2px">View Mode</div>' +
+        '<div style="display:flex;gap:4px">' +
+          '<button onclick="setSuperAdminMode(\'platform\')" style="flex:1;padding:5px 0;border:none;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;' + (STATE.superAdminViewMode==='platform'?'background:rgba(255,255,255,.25);color:#fff':'background:rgba(255,255,255,.08);color:rgba(255,255,255,.55)') + '">⚡ Platform</button>' +
+          '<button onclick="setSuperAdminMode(\'company\')" style="flex:1;padding:5px 0;border:none;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;' + (STATE.superAdminViewMode==='company'?'background:rgba(255,255,255,.25);color:#fff':'background:rgba(255,255,255,.08);color:rgba(255,255,255,.55)') + '">🏢 Admin</button>' +
+          '<button onclick="setSuperAdminMode(\'agent\')" style="flex:1;padding:5px 0;border:none;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;' + (STATE.superAdminViewMode==='agent'?'background:rgba(255,255,255,.25);color:#fff':'background:rgba(255,255,255,.08);color:rgba(255,255,255,.55)') + '">👤 Agent</button>' +
+        '</div>' +
+      '</div>' : '') +
       '<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 8px">' +
-        '<div style="width:32px;height:32px;border-radius:50%;background:' + (STATE.isAdmin?'linear-gradient(135deg,var(--a),var(--gst))':'var(--as)') + ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0">' + (STATE.user?.name||'U')[0].toUpperCase() + '</div>' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:' + (STATE.isSuperAdmin?'linear-gradient(135deg,#6366F1,#8B5CF6)':STATE.isAdmin?'linear-gradient(135deg,var(--a),var(--gst))':'var(--as)') + ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0">' + (STATE.user?.name||'U')[0].toUpperCase() + '</div>' +
         '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (STATE.user?.name||'User') + '</div>' +
-        '<div style="font-size:9px;margin-top:1px">' + (STATE.isAdmin?'<span style="background:linear-gradient(135deg,var(--a),var(--gst));color:#fff;padding:1px 6px;border-radius:99px;font-weight:700">⚡ Admin</span>':'<span style="color:var(--t3);font-weight:600">Viewer</span>') + '</div>' +
+        '<div style="font-size:9px;margin-top:1px">' + (STATE.isSuperAdmin?'<span style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;padding:1px 6px;border-radius:99px;font-weight:700">⚡ Super Admin</span>':STATE.isAdmin?'<span style="background:linear-gradient(135deg,var(--a),var(--gst));color:#fff;padding:1px 6px;border-radius:99px;font-weight:700">Admin</span>':'<span style="color:var(--t3);font-weight:600">Agent</span>') + '</div>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px">' +
         '<button class="btn bic" style="flex:1;height:32px" onclick="openShareModal()" title="Share">' + IC.share + '</button>' +
         '<button class="btn bic" style="flex:1;height:32px" onclick="setTheme(!STATE.dark)" title="Theme">' + (STATE.dark?IC.sun:IC.moon) + '</button>' +
-        (STATE.isAdmin?'<button class="btn bp" style="flex:2;height:32px;font-size:12px;padding:0 10px" onclick="openAddSale()">+ Sale</button>':'') +
+        (STATE.isAdmin&&STATE.superAdminViewMode!=='platform'?'<button class="btn bp" style="flex:2;height:32px;font-size:12px;padding:0 10px" onclick="openAddSale()">+ Sale</button>':STATE.isAdmin?'':'') +
       '</div>' +
     '</div>' +
   '</div>';
@@ -203,7 +211,8 @@ function renderPage() {
   if (!STATE.isAdmin && STATE.isAgent && !AGENT_PAGES.has(STATE.page)) {
     return renderDashboard();
   }
-  switch(STATE.page) {
+  const _banner = typeof renderSuperAdminModeBanner === 'function' ? renderSuperAdminModeBanner() : '';
+  const _content = (() => { switch(STATE.page) {
     case 'checkins': return renderMyCheckins();
     case 'nearby': return renderNearbyShops();
     case 'map': return renderMapPage();
@@ -221,7 +230,8 @@ function renderPage() {
     case 'settings': return renderSettings();
     case 'platform': return renderPlatformPage();
     default: return renderDashboard();
-  }
+  }})();
+  return _banner + _content;
 }
 function bindPage() {
   if (STATE.page==='sales') bindSales();

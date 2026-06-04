@@ -64,6 +64,9 @@ function renderSettings() {
     '<div><strong style="color:var(--t)">H2 Line</strong> · v3.0</div>' +
     '<div>Built for distribution businesses. GST @ 8%, price tiers, weekly reports, invoice tracking, sharing.</div>' +
     '<div style="margin-top:6px;font-size:11px;color:var(--t3)">© 2024 H2 Line · Data stored locally on your device.</div></div></div>' +
+    '<div class="card" style="margin-bottom:12px"><div class="st" style="margin-bottom:12px">Security</div>' +
+    '<div style="font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.6">Send a password reset link to <strong>' + esc(STATE.user?.email||'your email') + '</strong>. You\'ll receive an email with a link to set a new password.</div>' +
+    '<button class="btn bs bw" style="height:44px;font-size:13px" onclick="sendPasswordReset()">📧 Send Password Reset Email</button></div>' +
     '<button class="btn bd bw" style="height:48px;margin-top:8px" onclick="logout()">Sign Out</button>' +
     '<button class="btn bs bw" style="height:44px;margin-top:8px" onclick="goPage(\'importexport\')">📁 Import / Export Data</button></div>';
 }
@@ -74,3 +77,16 @@ function saveBizProfile() {
 }
 function setTheme(dark) { STATE.dark=dark; saveState(); render(); }
 function logout() { if(confirm('Sign out?')){db.set('user',null);STATE.user=null;render();} }
+async function sendPasswordReset() {
+  const email = STATE.user?.email;
+  if (!email) { showToast('⚠️ No email found'); return; }
+  if (window.doFBForgot) {
+    // Use existing forgot flow — temporarily set the email input if available
+    if (window._fbAuth) {
+      try {
+        await window._fbAuth.sendPasswordResetEmail(email);
+        showToast('✓ Reset link sent to '+email);
+      } catch(e) { showToast('⚠️ '+(e.message||'Failed to send reset email')); }
+    } else { showToast('⚠️ Firebase not connected'); }
+  } else { showToast('⚠️ Reset not available offline'); }
+}

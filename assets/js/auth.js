@@ -132,7 +132,8 @@ function doAuth() {
         _runAuth();
       } else if (waited >= 10000) {
         clearInterval(interval);
-        if (sub) { sub.textContent = authMode === 'signup' ? 'Create Account' : 'Log In'; sub.disabled = false; }
+        const freshSub = document.getElementById('a-submit');
+        if (freshSub) { freshSub.textContent = authMode === 'signup' ? 'Create Account' : 'Log In'; freshSub.disabled = false; }
         showAuthMsg('Connection timeout — check your internet and try again');
       }
     }, 100);
@@ -202,6 +203,23 @@ function renderSuspended() {
     '</div></div>';
 }
 
+// ── SUPER ADMIN MODE BANNER ───────────────────────────────────────────────────
+function renderSuperAdminModeBanner() {
+  if (!STATE.isSuperAdmin || STATE.superAdminViewMode === 'platform') return '';
+  const isCompany = STATE.superAdminViewMode === 'company';
+  const orgName = STATE.orgProfile?.name || 'Company';
+  const label = isCompany ? '🏢 Company Admin — ' + esc(orgName) : '👤 Agent View — ' + esc(orgName);
+  return '<div style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;padding:10px 16px;border-radius:var(--rx);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+    '<div style="font-size:13px;font-weight:700">' + label + '</div>' +
+    '<div style="display:flex;gap:6px">' +
+      (isCompany
+        ? '<button onclick="setSuperAdminMode(\'agent\')" style="background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.85);padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">👤 Agent</button>'
+        : '<button onclick="setSuperAdminMode(\'company\')" style="background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.85);padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">🏢 Admin</button>') +
+      '<button onclick="setSuperAdminMode(\'platform\')" style="background:rgba(255,255,255,.25);border:none;color:#fff;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">⚡ Exit</button>' +
+    '</div>' +
+  '</div>';
+}
+
 // ── TOP BAR ──────────────────────────────────────────────────────────────────
 function renderTopBar() {
   const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts',activitylog:'Activity Log',platform:'Platform Admin'};
@@ -209,10 +227,17 @@ function renderTopBar() {
   const viewerBadge = STATE.isViewer ? '<div class="viewer-badge">\uD83D\uDC41 VIEWER</div>' : '';
   const syncPending = db.get('syncPending', false);
   const syncDot = STATE.isAdmin ? '<div title="' + (syncPending ? 'Pending sync — will upload when online' : 'Synced to cloud') + '" style="width:7px;height:7px;border-radius:50%;background:' + (syncPending ? 'var(--warn)' : 'var(--ok)') + ';flex-shrink:0;' + (syncPending ? 'animation:pulse 2s infinite' : '') + '"></div>' : '';
+  const saModeBadge = STATE.isSuperAdmin
+    ? (STATE.superAdminViewMode === 'platform'
+        ? '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;flex-shrink:0">⚡ SUPER</span>'
+        : STATE.superAdminViewMode === 'company'
+          ? '<span onclick="setSuperAdminMode(\'platform\')" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--as);color:var(--a);flex-shrink:0;cursor:pointer">🏢 ADMIN</span>'
+          : '<span onclick="setSuperAdminMode(\'platform\')" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--oks);color:var(--ok);flex-shrink:0;cursor:pointer">👤 AGENT</span>')
+    : '';
   return '<div id="topbar">' +
     '<img src="'+LOGO_AUTH+'" style="height:28px;width:auto;object-fit:contain;max-width:90px" alt="H2 Line">' +
     '<div style="width:1px;height:14px;background:var(--b)"></div>' +
-    '<div style="font-size:13px;color:var(--t2);font-weight:500;flex:1;display:flex;align-items:center;gap:6px">' + (labels[STATE.page]||STATE.page) + syncDot + '</div>' +
+    '<div style="font-size:13px;color:var(--t2);font-weight:500;flex:1;display:flex;align-items:center;gap:6px">' + (labels[STATE.page]||STATE.page) + syncDot + saModeBadge + '</div>' +
     shareBtn +
     '<button class="btn bic" onclick="goPage(\'items\')" style="' + (STATE.page==='items'?'background:var(--as);color:var(--a)':'') + '" title="Items">' + IC.items + '</button>' +
     '<button class="btn bic" onclick="goPage(\'report\')" style="' + (STATE.page==='report'?'background:var(--as);color:var(--a)':'') + '" title="Reports">' + IC.report + '</button>' +
@@ -243,6 +268,13 @@ function renderNav() {
     {id:'alerts',ico:IC.bell,lbl:'Alerts',badge:alertsDue},
     {id:'activitylog',ico:IC.log,lbl:'Log'},
     ...(STATE.isSuperAdmin ? [{id:'platform',ico:IC.platform,lbl:'Platform'}] : []),
+  ] : STATE.isSuperAdmin ? [
+    // Super admin in agent view — show agent tabs + platform shortcut
+    {id:'dashboard',ico:IC.home,lbl:'Home'},
+    {id:'sales',ico:IC.sales,lbl:'My Sales'},
+    {id:'pending',ico:IC.pending,lbl:'Pending',badge:pendingCount},
+    {id:'shops',ico:IC.shop,lbl:'Shops'},
+    {id:'platform',ico:IC.platform,lbl:'⚡ SA'},
   ] : [
     {id:'dashboard',ico:IC.home,lbl:'Home'},
     {id:'sales',ico:IC.sales,lbl:'My Sales'},
