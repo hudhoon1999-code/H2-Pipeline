@@ -51,7 +51,9 @@ function renderImportExport() {
     '<button class="btn bs" style="padding:7px 11px;font-size:11px" onclick="dlSampleSalesCSV()">' + IC.dl + ' Sample</button>' +
     '</div>' +
     '<div style="font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.6">' +
-    'Columns: <code style="background:var(--s2);padding:1px 5px;border-radius:4px;font-size:11px">date, shopName, area, invoiceId, itemName, category, priceMode, quantity, unitPrice, halfPrice, casePrice, lineTotal, finalTotal, gstInclusive, currency, paymentStatus, notes</code>' +
+    'Required: <code style="background:var(--errs);color:var(--err);padding:1px 5px;border-radius:4px;font-size:11px">date, shopName, itemName</code> &nbsp;·&nbsp; ' +
+    'Optional: <code style="background:var(--s2);padding:1px 5px;border-radius:4px;font-size:11px">area, invoiceId, category, priceMode, quantity, unitPrice, halfPrice, casePrice, lineTotal, finalTotal, gstInclusive, currency, paymentStatus, notes, agentEmail</code><br>' +
+    '<span style="color:var(--t3);font-size:11px">Dates: YYYY-MM-DD, DD/MM/YYYY or MM/DD/YYYY all accepted. Duplicate rows are skipped automatically.</span>' +
     '</div>' +
     '<label style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--s2);border:2px dashed var(--b);border-radius:var(--rs);cursor:pointer">' +
     IC.ul + '<div><div style="font-weight:600;font-size:14px">Select sales CSV file</div><div style="font-size:11px;color:var(--t2)">.csv files only</div></div>' +
@@ -75,10 +77,10 @@ function dlSampleShopCSV() {
 }
 function dlSampleSalesCSV() {
   const today = new Date().toISOString().split('T')[0];
-  const csv = 'date,shopName,area,invoiceId,itemName,category,priceMode,quantity,unitPrice,halfPrice,casePrice,lineTotal,finalTotal,gstInclusive,currency,paymentStatus,notes\n' +
-    today + ',On The Way 1,Male City,INV-001,Antabax Shower Cream 250ml,Personal Care,case,2,0,0,449.07,898.14,969.99,false,MVR,Pending,\n' +
-    today + ',On The Way 1,Male City,INV-001,Samyang Ramen 5pk,Food,halfCase,3,0,185.00,0,555.00,599.40,false,MVR,Pending,\n' +
-    today + ',Viva Mart,Hulhumale,INV-002,Mineral Water 500ml,Beverages,unit,24,8.50,0,0,204.00,220.32,false,MVR,Paid,';
+  const csv = 'date,shopName,area,invoiceId,itemName,category,priceMode,quantity,unitPrice,halfPrice,casePrice,lineTotal,finalTotal,gstInclusive,currency,paymentStatus,notes,agentEmail\n' +
+    today + ',On The Way 1,Male City,INV-001,Antabax Shower Cream 250ml,Personal Care,case,2,0,0,449.07,898.14,969.99,false,MVR,Pending,,\n' +
+    today + ',On The Way 1,Male City,INV-001,Samyang Ramen 5pk,Food,halfCase,3,0,185.00,0,555.00,599.40,false,MVR,Pending,,\n' +
+    today + ',Viva Mart,Hulhumale,INV-002,Mineral Water 500ml,Beverages,unit,24,8.50,0,0,204.00,220.32,false,MVR,Paid,,';
   dlFile(csv, 'h2line-sample-sales.csv', 'text/csv');
   showToast('\u2713 Sample sales CSV downloaded');
 }
@@ -162,94 +164,165 @@ function previewCSV(input) {
   };
   reader.readAsText(file);
 }
+// Normalise a date string to YYYY-MM-DD regardless of input format
+function normDateStr(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmY = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (dmY) {
+    const [,d,m,y] = dmY;
+    // If day > 12 it can only be DD/MM
+    if (parseInt(d) > 12) return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+    // Ambiguous — assume DD/MM for non-US locale
+    return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+  }
+  // MM/DD/YYYY (US)
+  const mDY = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (mDY) {
+    const [,m,d,y] = mDY;
+    if (parseInt(m) > 12) return y+'-'+d.padStart(2,'0')+'-'+m.padStart(2,'0');
+    return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+  }
+  // Try native Date parse as last resort
+  const nd = new Date(s);
+  if (!isNaN(nd)) return nd.toISOString().split('T')[0];
+  return s;
+}
+
 function doImportCSV(rows) {
   if(!rows||!rows.length){showToast('⚠️ No rows to import');return;}
-  let imported=0, skipped=0;
-  rows.forEach(raw=>{
+  let imported=0, skipped=0, warnings=[];
+  // For agent imports, auto-assign their agentId; admin imports can specify via column
+  const selfAgentId   = STATE.isAgent ? (STATE.agentId || STATE.user?.id || null) : null;
+  const selfAgentName = STATE.isAgent ? (STATE.user?.name || null) : null;
+
+  rows.forEach((raw, rowIdx)=>{
     const r = normalizeCSVRow(raw);
-    const date = String(r.date || r.datetime || '').trim();
-    const shopName = String(r.shopname || r.shop || r.shoptitle || '').trim();
-    const area = String(r.area || '').trim();
-    const invoiceId = String(r.invoiceid || r.invoice || r.billid || '').trim();
-    const itemName = String(r.itemname || r.item || r.product || '').trim();
-    const category = String(r.category || '').trim();
-    const priceType = normalizePriceType(r.pricemode || r.saletype || r.pricetype || r.packtype || 'unit');
-    const packSize = parseFloat(r.packsize || r.unitspersaletype || r.packcount || (priceType === 'case' ? 12 : priceType === 'halfCase' ? 6 : 1)) || 1;
-    const qty = parseFloat(r.quantity || r.qty || r.units || 1) || 1;
-    const currency = String(r.currency || STATE.currency || 'MVR').trim().toUpperCase();
-    const gstInc = String(r.gstinclusive || r.gstincl || 'true').toLowerCase() === 'true';
-    const status = String(r.paymentstatus || r.status || 'Paid').trim();
-    const notes = String(r.notes || '').trim();
 
-    const halfPrice = parseFloat(r.halfprice || r.halfcaseprice || r.halfpriceeach || 0) || 0;
-    const casePrice = parseFloat(r.caseprice || r.casepriceeach || 0) || 0;
-    const unitPriceRaw = parseFloat(r.unitprice || r.price || r.saleprice || r.packprice || 0) || 0;
-    const tierPrice = getTierPriceForType(priceType, unitPriceRaw, halfPrice, casePrice);
-    const lineTotalRaw = parseFloat(r.linetotal || r.rowtotal || 0) || 0;
-    const finalTotalRaw = parseFloat(r.finaltotal || r.total || 0) || 0;
+    // ── date ──
+    const dateRaw = String(r.date || r.datetime || r.saledate || r.invoicedate || '').trim();
+    const date = normDateStr(dateRaw);
 
-    if(!shopName || !itemName || !date){ skipped++; return; }
+    // ── required fields ──
+    const shopName = String(r.shopname || r.shop || r.shoptitle || r.customername || r.client || '').trim();
+    const itemName = String(r.itemname || r.item || r.product || r.productname || r.description || r.itemdescription || '').trim();
 
-    let lineTotal = lineTotalRaw;
+    if (!shopName || !itemName) { skipped++; warnings.push('Row '+(rowIdx+2)+': missing shop or item name'); return; }
+    if (!date) { skipped++; warnings.push('Row '+(rowIdx+2)+': missing or unreadable date ("'+dateRaw+'")'); return; }
+
+    const area       = String(r.area || r.location || r.region || '').trim();
+    const invoiceId  = String(r.invoiceid || r.invoice || r.billid || r.invoiceno || r.invno || '').trim();
+    const category   = String(r.category || r.cat || r.itemcategory || '').trim();
+    const priceType  = normalizePriceType(r.pricemode || r.saletype || r.pricetype || r.packtype || r.type || 'unit');
+    const qty        = parseFloat(r.quantity || r.qty || r.units || r.count || 1) || 1;
+    const currency   = String(r.currency || STATE.currency || 'MVR').trim().toUpperCase() || 'MVR';
+    const notes      = String(r.notes || r.remarks || r.comment || '').trim();
+
+    // Payment status — tolerate many spellings
+    const rawStatus = String(r.paymentstatus || r.status || r.payment || 'Pending').trim().toLowerCase();
+    const status = rawStatus.startsWith('paid') ? 'Paid' : rawStatus.startsWith('part') ? 'Partial' : 'Pending';
+
+    // GST inclusive — default false (most exports are exclusive)
+    const gstIncRaw = String(r.gstinclusive || r.gstincl || r.inclusive || 'false').toLowerCase();
+    const gstInc = gstIncRaw === 'true' || gstIncRaw === '1' || gstIncRaw === 'yes';
+
+    // Prices
+    const halfPrice    = parseFloat(r.halfprice || r.halfcaseprice || r.halfpriceeach || 0) || 0;
+    const casePrice    = parseFloat(r.caseprice || r.casepriceeach || 0) || 0;
+    const unitPriceRaw = parseFloat(r.unitprice || r.price || r.saleprice || r.packprice || r.rate || 0) || 0;
+    const tierPrice    = getTierPriceForType(priceType, unitPriceRaw, halfPrice, casePrice);
+
+    const lineTotalRaw  = parseFloat(r.linetotal || r.rowtotal || r.subtotal || r.nettotal || 0) || 0;
+    const finalTotalRaw = parseFloat(r.finaltotal || r.total || r.grandtotal || r.amount || 0) || 0;
+
+    // Compute lineTotal / finalTotal
+    let lineTotal  = lineTotalRaw;
     let finalTotal = finalTotalRaw;
 
-    if (!lineTotal && finalTotal) {
-      lineTotal = +(finalTotal / 1.08).toFixed(2);
-    }
-
-    if (!lineTotal && tierPrice && qty) {
-      lineTotal = +(tierPrice * qty).toFixed(2);
-    }
-
-    // GST is always 8% on these imports.
-    if (!finalTotal && lineTotal) {
+    // Derive lineTotal from price × qty when missing
+    if (!lineTotal && tierPrice && qty) lineTotal = +(tierPrice * qty).toFixed(2);
+    // Derive lineTotal from finalTotal (strip GST)
+    if (!lineTotal && finalTotal) lineTotal = +(finalTotal / (gstInc ? 1 : 1.08)).toFixed(2);
+    // Derive finalTotal from lineTotal
+    if (!finalTotal && lineTotal) finalTotal = gstInc ? lineTotal : +(lineTotal * 1.08).toFixed(2);
+    // When finalTotal == lineTotal and GST not inclusive, assume finalTotal is the pre-GST value
+    if (!gstInc && lineTotal && Math.abs(finalTotalRaw - lineTotalRaw) < 0.01 && finalTotalRaw > 0) {
       finalTotal = +(lineTotal * 1.08).toFixed(2);
     }
 
-    // If a CSV row came in with pre-GST values in finalTotal, correct it.
-    if (!gstInc && lineTotal) {
-      if (!finalTotalRaw || Math.abs(finalTotalRaw - lineTotal) < 0.01) {
-        finalTotal = +(lineTotal * 1.08).toFixed(2);
+    const gstAmt = +(finalTotal - lineTotal).toFixed(2);
+
+    // Agent assignment
+    let agentId   = selfAgentId;
+    let agentName = selfAgentName;
+    if (STATE.isAdmin) {
+      const csvAgentEmail = String(r.agentemail || r.agent || '').trim().toLowerCase();
+      const csvAgentId    = String(r.agentid || '').trim();
+      if (csvAgentId) {
+        const ag = STATE.agents.find(a=>a.id===csvAgentId);
+        if (ag) { agentId=ag.id; agentName=ag.name; }
+      } else if (csvAgentEmail) {
+        const ag = STATE.agents.find(a=>(a.email||'').toLowerCase()===csvAgentEmail);
+        if (ag) { agentId=ag.id; agentName=ag.name; }
       }
     }
 
-    const gstAmt = +(finalTotal - lineTotal).toFixed(2);
     const sale = {
       id: uid(), date, shopName, area, invoiceId, itemName, category,
-      priceType, packSize, quantity: qty, unitPrice: tierPrice,
+      priceType, quantity: qty, unitPrice: tierPrice,
       halfPrice, casePrice, lineTotal, gstInclusive: gstInc, gstRate: GST_RATE,
-      gstAmt, finalTotal, currency, paymentStatus: status, notes
+      gstAmt, finalTotal, currency, paymentStatus: status, notes,
+      agentId, agentName
     };
 
-    const dup = STATE.sales.find(s => s.date===date && s.shopName===shopName && s.invoiceId===invoiceId && s.itemName===itemName && s.quantity===qty && s.finalTotal===sale.finalTotal);
-    if(dup){ skipped++; return; }
+    // Duplicate check (same date + shop + invoice + item + qty + total)
+    const dup = STATE.sales.find(s =>
+      s.date === date && normShopName(s.shopName) === normShopName(shopName) &&
+      (s.invoiceId||'') === invoiceId &&
+      s.itemName.toLowerCase() === itemName.toLowerCase() &&
+      Math.abs(s.quantity - qty) < 0.01 &&
+      Math.abs(s.finalTotal - finalTotal) < 0.01
+    );
+    if (dup) { skipped++; return; }
 
     STATE.sales.push(sale);
 
-    const existing = STATE.items.find(i => i.name.toLowerCase() === itemName.toLowerCase());
-    if (existing) {
-      if (priceType === 'unit' && unitPriceRaw) existing.unitPrice = unitPriceRaw;
-      if (priceType === 'halfCase' && (halfPrice || tierPrice)) existing.halfPrice = halfPrice || tierPrice;
-      if (priceType === 'case' && (casePrice || tierPrice)) existing.casePrice = casePrice || tierPrice;
-      if (category && !existing.category) existing.category = category;
+    // Auto-update items catalogue
+    const existItem = STATE.items.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+    if (existItem) {
+      if (priceType === 'unit' && unitPriceRaw > 0) existItem.unitPrice = unitPriceRaw;
+      if (priceType === 'halfCase' && (halfPrice || tierPrice) > 0) existItem.halfPrice = halfPrice || tierPrice;
+      if (priceType === 'case' && (casePrice || tierPrice) > 0) existItem.casePrice = casePrice || tierPrice;
+      if (category && !existItem.category) existItem.category = category;
     } else {
       const obj = {id:uid(), name:itemName, category, unitPrice:0, halfPrice:0, casePrice:0};
-      if (priceType === 'unit' && unitPriceRaw) obj.unitPrice = unitPriceRaw;
-      if (priceType === 'halfCase' && (halfPrice || tierPrice)) obj.halfPrice = halfPrice || tierPrice;
-      if (priceType === 'case' && (casePrice || tierPrice)) obj.casePrice = casePrice || tierPrice;
+      if (priceType === 'unit') obj.unitPrice = unitPriceRaw;
+      else if (priceType === 'halfCase') obj.halfPrice = halfPrice || tierPrice;
+      else if (priceType === 'case') obj.casePrice = casePrice || tierPrice;
       STATE.items.push(obj);
     }
 
-    const _existShop = STATE.shops.find(s => normShopName(s.name) === normShopName(shopName));
-    if(_existShop){ if(area && !_existShop.area) _existShop.area = area; }
-    else STATE.shops.push({id:uid(), name:shopName, area, owner:'', contact:'', priority:'Medium', notes:'', lastVisit:date});
+    // Auto-update shops
+    const existShop = STATE.shops.find(s => normShopName(s.name) === normShopName(shopName));
+    if (existShop) { if (area && !existShop.area) existShop.area = area; }
+    else STATE.shops.push({id:uid(), name:shopName, area, owner:'', contact:'', priority:'Medium', notes:'', lastVisit:date, createdAt:new Date().toISOString()});
 
     imported++;
   });
+
   saveState();
   window.csvPendingRows = null;
   const cp = document.getElementById('csv-preview'); if(cp) cp.innerHTML='';
-  showToast('✓ Imported ' + imported + ' rows' + (skipped ? ' (' + skipped + ' skipped)' : '') + '!');
+  logActivity('csv_import', (STATE.user?.name||'?') + ' imported ' + imported + ' sales rows' + (skipped?' ('+skipped+' skipped)':''));
+  let msg = '✓ Imported ' + imported + ' rows' + (skipped ? ' · ' + skipped + ' skipped' : '');
+  if (warnings.length) {
+    msg += ' · ' + warnings.length + ' warning' + (warnings.length>1?'s':'');
+    console.warn('CSV import warnings:', warnings);
+  }
+  showToast(msg);
   render();
 }
 function restoreBackup(input) {
@@ -335,8 +408,9 @@ function doImportShops() {
   const pending = window.shopImportPending;
   if (!pending) { showToast('\u26A0\uFE0F Run Preview first'); return; }
   let added=0, merged=0;
+  const now = new Date().toISOString();
   pending.toAdd.forEach(s => {
-    STATE.shops.push({id:uid(), name:s.name, owner:s.owner, contact:s.contact, area:s.area, priority:s.priority||'Medium', type:s.type||'', notes:s.notes||'', lastVisit:''});
+    STATE.shops.push({id:uid(), name:s.name, owner:s.owner, contact:s.contact, area:s.area, priority:s.priority||'Medium', type:s.type||'', notes:s.notes||'', lastVisit:'', createdAt:now});
     added++;
   });
   pending.toMerge.forEach(({existing, changes}) => {
@@ -345,6 +419,7 @@ function doImportShops() {
   });
   window.shopImportPending = null;
   saveState();
+  logActivity('csv_import', (STATE.user?.name||'?') + ' imported shops: ' + added + ' new, ' + merged + ' updated');
   const pr = document.getElementById('shop-import-preview'); if(pr) pr.innerHTML='';
   const ta = document.getElementById('shop-import-paste'); if(ta) ta.value='';
   showToast('\u2713 Imported: ' + added + ' new, ' + merged + ' updated');

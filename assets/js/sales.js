@@ -53,6 +53,14 @@ function renderAddSaleModal() {
           '</select>' +
         '</div>' +
       '</div>' +
+      // Admin: agent assignment
+      (STATE.isAdmin && STATE.agents.length ?
+      '<div class="iw" style="margin-top:6px"><label class="il">Assign to Agent (optional)</label>' +
+        '<select id="sd-agent" class="inp" style="height:40px">' +
+          '<option value="">— Unassigned —</option>' +
+          STATE.agents.map(a=>'<option value="'+a.id+'">'+esc(a.name)+(a.email?' ('+esc(a.email)+')':'')+'</option>').join('') +
+        '</select>' +
+      '</div>' : '') +
     '</div>' +
 
     // Items section
@@ -254,6 +262,10 @@ function saveInvoice() {
   const validItems = saleItems.filter(i=>i.itemName&&i.unitPrice>0&&i.quantity>0);
   if(!validItems.length){showToast('⚠️ Add at least one item with price');return;}
 
+  // Resolve agent assignment — agents always get self; admin can assign via dropdown
+  const assignedAgentId = STATE.isAgent ? (STATE.agentId || STATE.user?.id) : ((document.getElementById('sd-agent')||{}).value || null) || null;
+  const assignedAgentName = STATE.isAgent ? (STATE.user?.name || null) : (assignedAgentId ? (STATE.agents.find(a=>a.id===assignedAgentId)?.name || null) : null);
+
   validItems.forEach(item=>{
     const sale={
       id:uid(), date, shopName, area, invoiceId,
@@ -263,8 +275,8 @@ function saveInvoice() {
       gstInclusive:item.gstInclusive||false, gstRate:GST_RATE,
       gstAmt:item.gstAmt, finalTotal:item.finalTotal,
       currency:STATE.currency||'MVR', paymentStatus, notes:'',
-      agentId: STATE.agentId || STATE.user?.id || null,
-      agentName: STATE.user?.name || null
+      agentId: assignedAgentId,
+      agentName: assignedAgentName
     };
     STATE.sales.push(sale);
 
@@ -279,6 +291,7 @@ function saveInvoice() {
   });
 
   saveState();
+  logActivity('sale_add', (STATE.user?.name||'?') + ' added invoice ' + (invoiceId||'#') + ' for ' + shopName + ' (' + validItems.length + ' item' + (validItems.length!==1?'s':'') + ')');
   showToast('✓ Invoice saved — ' + validItems.length + ' item' + (validItems.length!==1?'s':''));
   saleItems = [];
   closeModal();
@@ -455,5 +468,21 @@ function deleteSelectedSales() {
   showToast('Deleted selected');
   render();
 }
-function markPaid(id) { STATE.sales = STATE.sales.map(s => s.id===id ? {...s, paymentStatus:'Paid'} : s); saveState(); showToast('✓ Marked Paid'); render(); }
-function delSale(id) { if(confirm('Delete this sale?')) { STATE.sales = STATE.sales.filter(s=>s.id!==id); saveState(); showToast('Deleted'); render(); } }
+function markPaid(id) {
+  const s = STATE.sales.find(x=>x.id===id);
+  STATE.sales = STATE.sales.map(x => x.id===id ? {...x, paymentStatus:'Paid'} : x);
+  saveState();
+  if(s) logActivity('payment_update', (STATE.user?.name||'?') + ' marked paid: ' + (s.shopName||'') + ' – ' + (s.itemName||''));
+  showToast('✓ Marked Paid');
+  render();
+}
+function delSale(id) {
+  const s = STATE.sales.find(x=>x.id===id);
+  if(confirm('Delete this sale?')) {
+    STATE.sales = STATE.sales.filter(x=>x.id!==id);
+    saveState();
+    if(s) logActivity('sale_delete', (STATE.user?.name||'?') + ' deleted sale: ' + (s.shopName||'') + ' – ' + (s.itemName||''));
+    showToast('Deleted');
+    render();
+  }
+}

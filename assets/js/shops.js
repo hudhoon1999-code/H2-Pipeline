@@ -1,7 +1,9 @@
 'use strict';
 // ── SHOPS ─────────────────────────────────────────────────────────────────────
+let shopsView = 'cards'; // 'cards' | 'database'
 
 function renderShops() {
+  if (shopsView === 'database') return renderShopDatabase();
   const sortOpts = [
     {v:'name', l:'Name'},
     {v:'total', l:'Total ↓'},
@@ -13,6 +15,7 @@ function renderShops() {
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px">' +
     '<div><h1 style="font-size:22px;font-weight:800">Shops</h1><div style="font-size:12px;color:var(--t2)">' + STATE.shops.length + ' shops</div></div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
+      '<button class="btn bs" style="padding:10px 12px;font-size:12px;background:var(--as);color:var(--a);border:1px solid var(--a)" onclick="shopsView=\'database\';render()">🗄 Database</button>' +
       (!shopsMassMode ? '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="openShopModal(null)">' + IC.plus + ' Add</button>' : '') +
       '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="toggleShopsMassMode()">' + (shopsMassMode ? 'Exit' : 'Mass Delete') + '</button>' +
       (shopsMassMode ? '<button class="btn bd" style="padding:10px 12px;font-size:12px" onclick="deleteSelectedShops()">Delete (' + selectedShops.size + ')</button>' : '') +
@@ -32,6 +35,52 @@ function renderShops() {
     '</div>' +
     '<input type="hidden" id="sh-pri-filter" value="All">' +
     '<div id="shops-list"></div></div>';
+}
+
+function renderShopDatabase() {
+  // For each shop, try to resolve the "first seen" date
+  const shopFirstSale = {};
+  STATE.sales.forEach(s => {
+    const k = normShopName(s.shopName);
+    if (!shopFirstSale[k] || s.date < shopFirstSale[k]) shopFirstSale[k] = s.date;
+  });
+  const sorted = [...STATE.shops].sort((a,b) => {
+    const da = a.createdAt || shopFirstSale[normShopName(a.name)] || '9999';
+    const db2 = b.createdAt || shopFirstSale[normShopName(b.name)] || '9999';
+    return da.localeCompare(db2);
+  });
+
+  const fmtDate = d => {
+    if (!d) return '—';
+    const dd = new Date(d);
+    if (isNaN(dd)) return d;
+    return dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  };
+
+  return '<div class="fu">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+      '<div><h1 style="font-size:22px;font-weight:800">Shop Database</h1>' +
+      '<div style="font-size:12px;color:var(--t2)">' + sorted.length + ' shops · sorted by date added</div></div>' +
+      '<button class="btn bs" style="padding:10px 12px;font-size:12px" onclick="shopsView=\'cards\';render()">← Back to Shops</button>' +
+    '</div>' +
+    '<div class="tw"><table class="dt"><thead><tr>' +
+      '<th>#</th><th>Shop Name</th><th>Owner</th><th>Area</th><th>Priority</th><th>Contact</th><th>Date Added</th><th>First Sale</th>' +
+    '</tr></thead><tbody>' +
+    sorted.map((shop, i) => {
+      const firstSale = shopFirstSale[normShopName(shop.name)];
+      const createdDisplay = shop.createdAt ? fmtDate(shop.createdAt) : (firstSale ? '<span style="color:var(--t3);font-size:10px">≈</span> ' + fmtDate(firstSale) : '<span style="color:var(--t3)">Unknown</span>');
+      return '<tr style="cursor:pointer" onclick="openShopDetail(\''+shop.id+'\')">' +
+        '<td style="color:var(--t3);font-size:11px">' + (i+1) + '</td>' +
+        '<td><div style="font-weight:700;font-size:13px">' + esc(shop.name) + '</div>' + (shop.type?'<div style="font-size:10px;color:var(--t3)">'+esc(shop.type)+'</div>':'') + '</td>' +
+        '<td style="font-size:12px;color:var(--t2)">' + esc(shop.owner||'—') + '</td>' +
+        '<td style="font-size:12px;color:var(--t2)">' + esc(shop.area||'—') + '</td>' +
+        '<td><span class="badge '+(shop.priority==='High'?'bpaid':shop.priority==='Medium'?'bpart':'')+'" style="font-size:9px">'+(shop.priority||'—')+'</span></td>' +
+        '<td style="font-size:12px">' + esc(shop.contact||'—') + '</td>' +
+        '<td style="font-size:12px;white-space:nowrap">' + createdDisplay + '</td>' +
+        '<td style="font-size:12px;color:var(--t3);white-space:nowrap">' + (firstSale ? fmtDate(firstSale) : '—') + '</td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div></div>';
 }
 function bindShops() {
   // Set active priority chip
@@ -214,7 +263,16 @@ function renderShopDetailModal(id) {
     '</div>';
 }
 function openShopModal(id) { STATE.modal={type:'shop',data:{id}}; render(); }
-function delShop(id) { if(confirm('Remove this shop?')){STATE.shops=STATE.shops.filter(s=>s.id!==id);saveState();showToast('Removed');render();} }
+function delShop(id) {
+  const shop = STATE.shops.find(s=>s.id===id);
+  if(confirm('Remove this shop?')){
+    STATE.shops=STATE.shops.filter(s=>s.id!==id);
+    saveState();
+    logActivity('shop_delete', (STATE.user?.name||'?') + ' deleted shop: ' + (shop?.name||id));
+    showToast('Removed');
+    render();
+  }
+}
 function renderShopModal(id) {
   const shop = id ? STATE.shops.find(s=>s.id===id) : null;
   // Restore values saved before pin-drop, or fall back to existing shop data
@@ -386,7 +444,12 @@ function saveShop(id) {
   const lat = parseFloat(v('sm-lat'))||null;
   const lng = parseFloat(v('sm-lng'))||null;
   const data = {name,owner:v('sm-owner'),contact:v('sm-contact'),area:v('sm-area'),type:v('sm-type')||'',priority:v('sm-priority')||'Medium',notes:v('sm-notes'),lat,lng};
-  if(id) STATE.shops=STATE.shops.map(s=>s.id===id?{...s,...data}:s);
-  else STATE.shops.push({id:uid(),...data,lastVisit:new Date().toISOString().split('T')[0]});
+  if(id) {
+    STATE.shops=STATE.shops.map(s=>s.id===id?{...s,...data}:s);
+    logActivity('shop_edit', (STATE.user?.name||'?') + ' edited shop: ' + name);
+  } else {
+    STATE.shops.push({id:uid(),...data,lastVisit:new Date().toISOString().split('T')[0],createdAt:new Date().toISOString()});
+    logActivity('shop_add', (STATE.user?.name||'?') + ' added shop: ' + name);
+  }
   saveState(); showToast('✓ Saved'); closeModal();
 }
