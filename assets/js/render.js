@@ -207,8 +207,8 @@ function closeModal() { STATE.modal=null; render(); }
 const AGENT_PAGES = new Set(['dashboard','sales','invoices','pending','shops','items','checkins','nearby','map','settings','activitylog']);
 
 function renderPage() {
-  // Block agents from admin-only pages
-  if (!STATE.isAdmin && STATE.isAgent && !AGENT_PAGES.has(STATE.page)) {
+  // Block agents from admin-only pages (super admin bypasses this to access platform page)
+  if (!STATE.isAdmin && STATE.isAgent && !AGENT_PAGES.has(STATE.page) && !(STATE.isSuperAdmin && STATE.page === 'platform')) {
     return renderDashboard();
   }
   const _banner = typeof renderSuperAdminModeBanner === 'function' ? renderSuperAdminModeBanner() : '';

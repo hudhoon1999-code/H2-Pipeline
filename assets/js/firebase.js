@@ -300,7 +300,7 @@ function applyUpdate() {
 
 if('serviceWorker' in navigator) {
   window.addEventListener('load',()=>{
-    const sw=`const CACHE='h2line-v5';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting();});`;
+    const sw=`const CACHE='h2line-v6';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting();});`;
     try {
       const blob=new Blob([sw],{type:'application/javascript'});
       const url=URL.createObjectURL(blob);
