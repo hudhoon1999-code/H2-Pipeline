@@ -40,7 +40,10 @@ let STATE = {
   isViewer: false,
   isAdmin: false,
   isAgent: false,
+  isSuperAdmin: false,
   agentId: null,
+  orgId: db.get('orgId', null),
+  orgProfile: db.get('orgProfile', null),
 };
 
 STATE.sales = (STATE.sales || []).map(normalizeSaleGSTRow);
@@ -127,6 +130,14 @@ function saveState() {
   db.set('syncPending', true);
   if (window.saveToFirestore) window.saveToFirestore();
 }
+
+// ── ACTIVITY LOG ────────────────────────────────────────────────────────────
+function logActivity(type, msg) {
+  const log = db.get('activityLog', []);
+  log.unshift({ id: uid(), type, msg, userName: STATE.user?.name || '?', ts: new Date().toISOString() });
+  db.set('activityLog', log.slice(0, 500));
+}
+function getActivityLog() { return db.get('activityLog', []); }
 
 // Admin email — used by firebase.js and auth.js
 const ADMIN_EMAIL = 'hudhoon1999@gmail.com';

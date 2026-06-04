@@ -2,6 +2,15 @@
 // ── RENDER + NAV + ROUTER ─────────────────────────────────────────────────
 const isDesktop = () => window.innerWidth >= 900;
 
+// Track last rendered page to animate only on real page changes
+let _lastRenderedPage = null;
+// Debounce rapid render calls (e.g. from Firestore snapshots) into one RAF
+let _renderRAF = null;
+function scheduleRender() {
+  if (_renderRAF) cancelAnimationFrame(_renderRAF);
+  _renderRAF = requestAnimationFrame(() => { _renderRAF = null; render(); });
+}
+
 // ── PARTIAL-RENDER HELPERS ────────────────────────────────────────────────
 // Sync only the modal overlay — add/replace/remove without touching the rest
 function _syncModal(root) {
@@ -33,8 +42,11 @@ function _patchDesktop(root) {
   });
   // Replace main area (header + content) — sidebar never touched
   const dm = document.getElementById('dm');
-  if (!dm) { root.innerHTML = renderDesktopShell(); return; }
-  dm.innerHTML = renderDesktopHeader() + '<div id="content" class="page-in">' + renderPage() + '</div>';
+  if (!dm) { root.innerHTML = renderDesktopShell(); _lastRenderedPage = STATE.page; return; }
+  // Only animate when the page actually changes — avoids data-refresh flicker
+  const pageChanged = STATE.page !== _lastRenderedPage;
+  _lastRenderedPage = STATE.page;
+  dm.innerHTML = renderDesktopHeader() + '<div id="content"' + (pageChanged ? ' class="page-in"' : '') + '>' + renderPage() + '</div>';
   // Sync FAB
   const showFab = !STATE.isViewer && !['settings','importexport'].includes(STATE.page);
   const fab = document.getElementById('fab');
@@ -50,7 +62,12 @@ function _patchMobile(root) {
   const nav = document.getElementById('bottomnav');
   if (nav) nav.outerHTML = renderNav();
   const content = document.getElementById('content');
-  if (content) content.innerHTML = renderPage();
+  if (content) {
+    const pageChanged = STATE.page !== _lastRenderedPage;
+    _lastRenderedPage = STATE.page;
+    if (pageChanged) content.className = 'page-in';
+    content.innerHTML = renderPage();
+  }
   _syncModal(root);
 }
 
@@ -59,14 +76,18 @@ function render() {
   const root = document.getElementById('app');
   if (!root) return;
   document.body.className = STATE.dark ? 'dark' : 'light';
-  if (!STATE.user) { root.innerHTML = renderAuth(); bindAuth(); return; }
+  if (!STATE.user) { _lastRenderedPage = null; root.innerHTML = renderAuth(); bindAuth(); return; }
+  if (!STATE.orgId && window._fbDb) { _lastRenderedPage = null; root.innerHTML = renderOrgSetup(); return; }
+  if (STATE.orgProfile?.status === 'suspended' && !STATE.isSuperAdmin) { _lastRenderedPage = null; root.innerHTML = renderSuspended(); return; }
   if (isDesktop()) {
     if (document.getElementById('ds')) { _patchDesktop(root); }
-    else { root.innerHTML = renderDesktopShell(); }
+    else { _lastRenderedPage = null; root.innerHTML = renderDesktopShell(); }
   } else {
     if (!document.getElementById('ds') && document.getElementById('bottomnav')) { _patchMobile(root); }
     else {
+      // First full mobile build — mark page so next patch won't animate
       const viewerFab = STATE.isViewer ? '' : renderFab();
+      _lastRenderedPage = STATE.page;
       root.innerHTML = renderTopBar() + '<div id="content" class="page-in">' + renderPage() + '</div>' + viewerFab + renderNav() + (STATE.modal ? renderModal() : '');
     }
   }
@@ -75,7 +96,7 @@ function render() {
 }
 
 function renderDesktopHeader() {
-  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',agents:'Agents',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts'};
+  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',agents:'Agents',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts',activitylog:'Activity Log',platform:'Platform Admin'};
   const tot  = STATE.sales.reduce((a,r) => a + saleFinalTotal(r), 0);
   const pend = STATE.sales.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + saleFinalTotal(r), 0);
   const pageLabel = labels[STATE.page] || STATE.page;
@@ -117,7 +138,9 @@ function renderDesktopShell() {
     { section: 'Manage', items: [
       {id:'alerts',ico:IC.bell,lbl:'Alerts',badge:alertsDue},
       {id:'importexport',ico:IC.ul,lbl:'Import / Export'},
+      {id:'activitylog',ico:IC.log,lbl:'Activity Log'},
       {id:'settings',ico:IC.cog,lbl:'Settings'},
+      ...(STATE.isSuperAdmin ? [{id:'platform',ico:IC.platform,lbl:'Platform Admin'}] : []),
     ]},
   ];
 
@@ -172,7 +195,7 @@ function closeModal() { STATE.modal=null; render(); }
 
 // ── PAGE ROUTER ──────────────────────────────────────────────────────────────
 // Pages accessible by agents (non-admin)
-const AGENT_PAGES = new Set(['dashboard','sales','invoices','pending','shops','items','checkins','nearby','map','settings']);
+const AGENT_PAGES = new Set(['dashboard','sales','invoices','pending','shops','items','checkins','nearby','map','settings','activitylog']);
 
 function renderPage() {
   // Block agents from admin-only pages
@@ -193,7 +216,9 @@ function renderPage() {
     case 'shops': return renderShops();
     case 'items': return renderItems();
     case 'importexport': return STATE.isAdmin ? renderImportExport() : renderDashboard();
+    case 'activitylog': return renderActivityLogPage();
     case 'settings': return renderSettings();
+    case 'platform': return renderPlatformPage();
     default: return renderDashboard();
   }
 }
@@ -202,5 +227,8 @@ function bindPage() {
   else if (STATE.page==='shops') bindShops();
   else if (STATE.page==='items') bindItems();
   else if (STATE.page==='map') bindMapPage();
-  else if (STATE.page==='nearby') {} // no binding needed
+  else if (STATE.page==='platform') {
+    if (typeof _platformDetail !== 'undefined' && _platformDetail) loadPlatformPayments(_platformDetail);
+    else loadPlatformOrgs();
+  }
 }

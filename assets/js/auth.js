@@ -15,6 +15,9 @@ function renderAuth() {
         '<input id="a-pw" class="inp" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" style="padding-right:44px;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff" autocomplete="current-password">' +
         '<button onclick="togglePw()" style="position:absolute;right:8px;top:26px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);padding:6px;font-size:16px">\uD83D\uDC41</button>' +
       '</div>' +
+      '<div class="iw" id="invite-row" style="display:none"><label class="il" style="color:rgba(255,255,255,.5)">Invite Code</label>' +
+        '<input id="a-invite" class="inp" placeholder="From your admin" style="text-transform:uppercase;letter-spacing:.08em;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff" maxlength="10">' +
+      '</div>' +
       '<div id="a-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px"></div>' +
       '<button id="a-submit" onclick="doAuth()" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border:none;border-radius:var(--rs);padding:13px 20px;font-size:15px;font-weight:700;cursor:pointer;width:100%;height:50px;box-shadow:0 6px 22px rgba(99,102,241,.45);transition:all .2s;font-family:Nunito,sans-serif">Log In</button>' +
       '<button onclick="switchTab(\'forgot\')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:12px;font-weight:500;width:100%;text-align:center;padding:4px;font-family:Nunito,sans-serif">Forgot password?</button>' +
@@ -93,6 +96,8 @@ function switchTab(m) {
   const tl = document.getElementById('tab-login');
   const ts = document.getElementById('tab-signup');
   if (nr) nr.style.display = m === 'signup' ? 'flex' : 'none';
+  const ir = document.getElementById('invite-row');
+  if (ir) ir.style.display = m === 'signup' ? 'flex' : 'none';
   if (sub) sub.textContent = m === 'login' ? 'Log In' : m === 'signup' ? 'Create Account' : 'Send Reset Link';
   if (tl) {
     tl.style.background = m === 'login' ? 'linear-gradient(135deg,#6366F1,#8B5CF6)' : 'transparent';
@@ -146,9 +151,60 @@ function bindAuth() {
 }
 function logout() { if(window.doFBLogout) doFBLogout(); }
 
+// ── ORG SETUP (join screen for users without an org) ─────────────────────────
+function renderOrgSetup() {
+  return '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px">' +
+    '<div style="width:100%;max-width:380px">' +
+    '<div style="text-align:center;margin-bottom:32px">' +
+    '<img src="'+LOGO_AUTH+'" style="width:100px;height:auto;margin-bottom:16px" alt="H2 Line">' +
+    '<h2 style="font-family:Outfit,sans-serif;font-size:26px;font-weight:800;margin:0 0 8px;color:var(--t1)">Join Your Team</h2>' +
+    '<p style="font-size:13px;color:var(--t2);margin:0;line-height:1.6">Enter the invite code from your organization admin</p>' +
+    '</div>' +
+    '<div class="card" style="padding:24px">' +
+    '<div class="iw"><label class="il">Invite Code</label>' +
+    '<input id="org-code" class="inp" style="text-transform:uppercase;font-size:22px;font-weight:800;letter-spacing:.15em;text-align:center" placeholder="XXXXXX" maxlength="10" onkeydown="if(event.key===\'Enter\')joinOrgWithCodeUI()"></div>' +
+    '<div id="org-msg" style="display:none;padding:10px 13px;border-radius:var(--rx);font-size:13px;margin-bottom:12px"></div>' +
+    '<button class="btn bp bw" style="height:50px;font-size:15px;font-weight:700" onclick="joinOrgWithCodeUI()">Join Organization</button>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:18px">' +
+    '<button class="btn" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer" onclick="logout()">Sign out of ' + esc(STATE.user?.email||'') + '</button>' +
+    '</div>' +
+    '</div></div>';
+}
+function joinOrgWithCodeUI() {
+  const code=((document.getElementById('org-code')||{}).value||'').trim().toUpperCase();
+  if(!code){showOrgMsg('Enter your invite code');return;}
+  const btn=document.querySelector('[onclick="joinOrgWithCodeUI()"]');
+  if(btn){btn.textContent='Joining...';btn.disabled=true;}
+  if(window.joinOrgWithCode) window.joinOrgWithCode(code);
+  else { if(btn){btn.textContent='Join Organization';btn.disabled=false;} showOrgMsg('Still connecting to Firebase…'); }
+}
+function showOrgMsg(msg,ok=false) {
+  const el=document.getElementById('org-msg'); if(!el) return;
+  el.style.display='block'; el.style.background=ok?'var(--oks)':'var(--errs)'; el.style.color=ok?'var(--ok)':'var(--err)'; el.textContent=msg;
+}
+
+// ── SUSPENDED SCREEN ──────────────────────────────────────────────────────────
+function renderSuspended() {
+  const reason = STATE.orgProfile?.suspendedReason || 'Non-payment';
+  const orgName = STATE.orgProfile?.name || 'your organization';
+  return '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px">' +
+    '<div style="width:100%;max-width:420px;text-align:center">' +
+    '<div style="font-size:72px;margin-bottom:16px;animation:pulse 2s ease-in-out infinite">🚫</div>' +
+    '<h2 style="font-family:Outfit,sans-serif;font-size:28px;font-weight:800;margin:0 0 10px;color:var(--err)">Account Suspended</h2>' +
+    '<p style="font-size:14px;color:var(--t2);margin:0 0 20px;line-height:1.7">Access to <strong>'+esc(orgName)+'</strong> has been suspended by H2 Line.</p>' +
+    '<div class="card" style="padding:18px;text-align:left;margin-bottom:20px">' +
+      '<div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Reason</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--err)">'+esc(reason)+'</div>' +
+    '</div>' +
+    '<p style="font-size:13px;color:var(--t2);line-height:1.7">Please settle any outstanding payments and contact your H2 Line administrator to restore access.</p>' +
+    '<button class="btn" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;margin-top:20px" onclick="logout()">Sign out</button>' +
+    '</div></div>';
+}
+
 // ── TOP BAR ──────────────────────────────────────────────────────────────────
 function renderTopBar() {
-  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts'};
+  const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts',activitylog:'Activity Log',platform:'Platform Admin'};
   const shareBtn = STATE.isViewer ? '' : '<button class="btn bic" onclick="openShareModal()" style="' + (SHARE.enabled?'background:var(--as);color:var(--a)':'') + '" title="Share">\uD83D\uDD17</button>';
   const viewerBadge = STATE.isViewer ? '<div class="viewer-badge">\uD83D\uDC41 VIEWER</div>' : '';
   const syncPending = db.get('syncPending', false);
@@ -185,7 +241,8 @@ function renderNav() {
     {id:'shops',ico:IC.shop,lbl:'Shops'},
     {id:'agents',ico:IC.agents,lbl:'Agents'},
     {id:'alerts',ico:IC.bell,lbl:'Alerts',badge:alertsDue},
-    {id:'importexport',ico:IC.ul,lbl:'Data'},
+    {id:'activitylog',ico:IC.log,lbl:'Log'},
+    ...(STATE.isSuperAdmin ? [{id:'platform',ico:IC.platform,lbl:'Platform'}] : []),
   ] : [
     {id:'dashboard',ico:IC.home,lbl:'Home'},
     {id:'sales',ico:IC.sales,lbl:'My Sales'},
@@ -215,6 +272,7 @@ function goPage(p) {
     shopsMassMode = false; selectedShops.clear();
     itemsMassMode = false; selectedItems.clear();
     salesMassMode = false; selectedSales.clear(); expandedInvoices.clear();
+    if (p !== 'shops' && typeof shopsView !== 'undefined') shopsView = 'cards';
   }
   STATE.page = p;
   STATE.modal = null;
@@ -247,6 +305,7 @@ function bootLocalAuth() {
     const u=users.find(x=>x.email===email&&x.password===pw);
     if(u){ db.set('user',u); STATE.user=u; STATE.isAdmin=u.email===ADMIN_EMAIL||u.role==='admin'; STATE.isAgent=!STATE.isAdmin;
       STATE.sales=db.get('sales',[]).map(normalizeSaleGSTRow); STATE.items=db.get('items',[]); STATE.shops=db.get('shops',[]); STATE.agents=db.get('agents',[]); STATE.targets=db.get('targets',[]); render();
+      setTimeout(()=>{ showToast('👋 Welcome back, ' + (u.name||'there') + '!'); logActivity('login', (u.name||'User') + ' logged in'); }, 400);
     } else { if(sub){sub.textContent='Log In';sub.disabled=false;} showAuthMsg('Wrong email or password'); }
   };
   window.doFBSignup = function() {

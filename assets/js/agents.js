@@ -15,10 +15,22 @@ function renderAgentsPage() {
     return {agent,total,paid,pending:total-paid,thisMonth,targetAmt:target?target.amount:0,progress,shops:[...new Set(sales.map(s=>s.shopName))].length,salesCount:sales.length};
   }).sort((a,b)=>b.thisMonth-a.thisMonth);
 
+  const inviteCard=(STATE.isAdmin&&STATE.orgProfile?.inviteCode)
+    ?'<div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff">'+
+      '<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Invite Code</div>'+
+      '<div style="font-size:30px;font-weight:800;letter-spacing:.12em;font-family:monospace">'+esc(STATE.orgProfile.inviteCode)+'</div>'+
+      '<div style="font-size:11px;opacity:.65;margin-top:6px">Share with agents to let them join '+esc(STATE.orgProfile.name||'your organization')+'</div>'+
+      '<div style="display:flex;gap:8px;margin-top:12px">'+
+      '<button class="btn" style="background:rgba(255,255,255,.2);color:#fff;flex:1;height:36px;font-size:12px;font-weight:700" onclick="copyInviteCode()">📋 Copy Code</button>'+
+      '<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;flex:1;height:36px;font-size:12px;font-weight:700" onclick="regenerateInviteCode()">🔄 Regenerate</button>'+
+      '</div></div>'
+    :'';
+
   return '<div class="fu">'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">'+
     '<div><h1 style="font-size:22px;font-weight:800">Sales Agents</h1><div style="font-size:12px;color:var(--t2)">'+STATE.agents.length+' agents</div></div>'+
     '<button class="btn bp" style="padding:10px 14px;font-size:13px" onclick="STATE.modal={type:\'addagent\',data:{}};render()">'+IC.plus+' Add Agent</button></div>'+
+    inviteCard+
     (stats.length?'<div class="card" style="margin-bottom:14px"><div class="sh"><div class="st">🏆 This Month</div><div style="font-size:11px;color:var(--t2)">'+new Date().toLocaleDateString('en',{month:'long',year:'numeric'})+'</div></div>'+
     stats.map((s,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b)">'+
       '<div style="width:22px;text-align:center">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="font-size:10px;color:var(--t3);font-weight:700">'+(i+1)+'</span>')+'</div>'+
@@ -113,15 +125,16 @@ function renderAgentDashboard() {
 // Agent modal renders
 function renderAddAgentModal(id) {
   const agent=id?getAgent(id):null,v=k=>agent?(agent[k]||''):'';
+  const isNew=!agent;
   return '<div class="mhan"></div><div style="font-family:Outfit,sans-serif;font-size:20px;font-weight:800;margin-bottom:18px">'+(agent?'Edit Agent':'Add Agent')+'</div>'+
     '<div class="fg">'+
     '<div class="iw"><label class="il">Full Name *</label><input id="ag-name" class="inp" value="'+v('name')+'" placeholder="Agent name"></div>'+
-    '<div class="iw"><label class="il">Email</label><input id="ag-email" class="inp" type="email" value="'+v('email')+'" placeholder="agent@email.com"></div>'+
+    '<div class="iw"><label class="il">Email'+(isNew?' *':'')+'</label><input id="ag-email" class="inp" type="email" value="'+v('email')+'" placeholder="agent@email.com"'+(isNew?'':' readonly style="opacity:.6"')+'></div>'+
     '<div class="iw"><label class="il">Phone</label><input id="ag-phone" class="inp" value="'+v('phone')+'" placeholder="7xxxxxxx"></div>'+
-    '<div class="iw"><label class="il">Firebase UID <span style="color:var(--t3);font-size:10px">(links their login to their agent profile)</span></label><input id="ag-uid" class="inp" value="'+v('uid')+'" placeholder="From Firebase Console → Auth → Users"></div>'+
+    (isNew?'<div class="iw"><label class="il">Password *</label><input id="ag-pw" class="inp" type="password" placeholder="Min 6 characters" autocomplete="new-password"></div>':'')+
     '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag-active" '+(v('active')!=='false'?'checked':'')+' style="width:18px;height:18px;accent-color:var(--a)"> Active</label>'+
     '<div style="display:flex;gap:10px"><button class="btn bs" style="flex:1;height:46px" onclick="closeModal()">Cancel</button>'+
-    '<button class="btn bp" style="flex:2;height:46px" onclick="saveAgent(\''+(id||'')+'\')">'+( agent?'Save Changes':'Add Agent')+'</button></div></div>';
+    '<button class="btn bp" style="flex:2;height:46px" id="ag-save-btn" onclick="saveAgent(\''+(id||'')+'\')">'+( agent?'Save Changes':'Add Agent')+'</button></div></div>';
 }
 function renderSetTargetModal(agentId) {
   const agent=getAgent(agentId),yr=currentYear(),mo=currentMonth(),wk=currentWeek();
@@ -149,16 +162,29 @@ function uid_gen(){return Math.random().toString(36).slice(2)+Date.now().toStrin
 function openEditAgent(id){STATE.modal={type:'addagent',data:{id}};render();}
 function openSetTarget(agentId){STATE.modal={type:'settarget',data:{agentId}};render();}
 function openAssignShops(agentId){STATE.modal={type:'assignshops',data:{agentId}};render();}
-function saveAgent(id) {
+async function saveAgent(id) {
   const name=((document.getElementById('ag-name')||{}).value||'').trim();
   if(!name){showToast('⚠️ Name required');return;}
-  const email=((document.getElementById('ag-email')||{}).value||'').trim();
   const phone=((document.getElementById('ag-phone')||{}).value||'').trim();
-  const agentUid=((document.getElementById('ag-uid')||{}).value||'').trim();
   const active=(document.getElementById('ag-active')||{}).checked!==false;
-  if(id) STATE.agents=STATE.agents.map(a=>a.id===id?{...a,name,email,phone,uid:agentUid,active}:a);
-  else STATE.agents.push({id:uid_gen(),name,email,phone,uid:agentUid,active:true,assignedShops:[]});
-  saveState();showToast('✓ Agent saved');closeModal();
+  if(id) {
+    // Edit existing agent — update local fields only, no password change
+    STATE.agents=STATE.agents.map(a=>a.id===id?{...a,name,phone,active}:a);
+    saveState();showToast('✓ Agent saved');closeModal();
+    return;
+  }
+  // New agent — create Firebase account
+  const email=((document.getElementById('ag-email')||{}).value||'').trim();
+  if(!email){showToast('⚠️ Email required');return;}
+  const pw=((document.getElementById('ag-pw')||{}).value||'').trim();
+  if(pw.length<6){showToast('⚠️ Password must be at least 6 characters');return;}
+  const btn=document.getElementById('ag-save-btn');
+  if(btn){btn.textContent='Creating...';btn.disabled=true;}
+  if(!window.createOrgUser){showToast('⚠️ Not connected to Firebase');if(btn){btn.textContent='Add Agent';btn.disabled=false;}return;}
+  const result=await window.createOrgUser(name,email,pw,'agent');
+  if(!result.success){if(btn){btn.textContent='Add Agent';btn.disabled=false;}showToast('⚠️ '+result.error);return;}
+  STATE.agents.push({id:uid_gen(),name,email,phone,uid:result.uid,active:true,assignedShops:[]});
+  saveState();showToast('✓ Agent created');closeModal();
 }
 function deleteAgent(id) {
   if(!confirm('Remove agent? Their sales history is kept.')) return;
@@ -179,13 +205,29 @@ function toggleAssignShop(agentId,encodedName,checked) {
   saveState();
 }
 
+// ── INVITE CODE HELPERS ───────────────────────────────────────────────────────
+function copyInviteCode() {
+  const code=STATE.orgProfile?.inviteCode||''; if(!code){showToast('No invite code');return;}
+  navigator.clipboard.writeText(code).then(()=>showToast('✓ Copied: '+code)).catch(()=>showToast('Code: '+code));
+}
+async function regenerateInviteCode() {
+  if(!confirm('Regenerate invite code? The old code will stop working.')) return;
+  const newCode=Math.random().toString(36).slice(2,8).toUpperCase();
+  try {
+    if(!window._fbDb||!STATE.orgId) throw new Error('Not connected');
+    await window._fbDb.collection('orgs').doc(STATE.orgId).update({inviteCode:newCode});
+    STATE.orgProfile={...(STATE.orgProfile||{}),inviteCode:newCode};
+    db.set('orgProfile',STATE.orgProfile); showToast('✓ New invite code: '+newCode); render();
+  } catch(e){ showToast('⚠️ '+e.message); }
+}
+
 // ── USER MANAGEMENT ───────────────────────────────────────────────────────────
 async function loadUsers() {
-  if (!STATE.isAdmin || !window._fbDb) return;
+  if (!STATE.isAdmin || !window._fbDb || !STATE.orgId) return;
   const el = document.getElementById('users-list'); if(!el) return;
   el.innerHTML = '<div style="font-size:12px;color:var(--t2);padding:8px 0">Loading...</div>';
   try {
-    const snap = await window._fbDb.collection('users').get();
+    const snap = await window._fbDb.collection('users').where('orgId','==',STATE.orgId).get();
     const users = [];
     snap.forEach(d => users.push({id:d.id,...d.data()}));
     if(!users.length){el.innerHTML='<div style="font-size:12px;color:var(--t3)">No users yet.</div>';return;}
