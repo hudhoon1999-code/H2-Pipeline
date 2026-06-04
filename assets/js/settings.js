@@ -10,11 +10,6 @@ function renderSettings() {
     '<div style="font-size:12px;color:var(--t2)">' + (STATE.user?.email||'—') + '</div>' +
     '<div style="margin-top:5px">' + (STATE.isAdmin?'<span style="background:linear-gradient(135deg,var(--a),var(--gst));color:#fff;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700">⚡ Admin</span>':'<span style="background:var(--s2);color:var(--t3);padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700">Viewer</span>') + '</div>' +
     '</div></div></div>' +
-    // Admin: Users management panel
-    (STATE.isAdmin ? '<div class="card" style="margin-bottom:12px;border-color:rgba(99,102,241,.35)"><div class="st" style="margin-bottom:12px">⚡ User Management</div>' +
-    '<div style="font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.6">Share this app URL with your team. They sign up, then you approve them here. Only you (admin) can edit or delete data.</div>' +
-    '<div id="users-list"><button class="btn bs bw" style="height:40px;font-size:13px" onclick="loadUsers()">Load Users</button></div>' +
-    '</div>' : '') +
 
     // Admin: Claim untagged sales migration tool
     (STATE.isAdmin && STATE.agents.length > 0 ? (() => {

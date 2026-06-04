@@ -50,7 +50,11 @@ function renderAgentsPage() {
       '</div></div></div>'+
       '<div style="text-align:right"><div style="font-size:18px;font-weight:800;color:var(--a)">'+money(s.total)+'</div><div style="font-size:10px;color:var(--t2)">all time</div></div></div>'+
       (s.targetAmt>0?'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:4px"><span>Monthly target</span><span style="font-weight:700;color:'+(s.progress>=100?'var(--ok)':s.progress>=60?'var(--a)':'var(--warn)')+'">'+money(s.thisMonth)+' / '+money(s.targetAmt)+'</span></div><div class="pb"><div class="pf" style="width:'+s.progress+'%;background:'+(s.progress>=100?'var(--ok)':s.progress>=60?'var(--a)':'var(--warn)')+'"></div></div></div>':'')
-    +'</div>').join('')+'</div>';
+    +'</div>').join('')+
+    // Team Members card — admin only
+    '<div class="card" style="margin-top:4px"><div class="sh" style="margin-bottom:10px"><div class="st">👥 Team Members</div><div style="font-size:11px;color:var(--t2)">Roles &amp; access</div></div>'+
+    '<div id="users-list"><div style="font-size:12px;color:var(--t2);padding:6px 0">Loading…</div></div></div>'+
+    '</div>';
 }
 
 function renderAgentDetail(agentId) {
@@ -235,7 +239,8 @@ async function loadUsers() {
       const isMe = u.email === STATE.user?.email;
       const isSuperAdm = u.email === (window.ADMIN_EMAIL||'hudhoon1999@gmail.com');
       const isAdm = isSuperAdm || u.role === 'admin';
-      const badge = isSuperAdm
+      // Only reveal super admin badge to themselves — other admins just see "Admin"
+      const badge = (isSuperAdm && STATE.isSuperAdmin)
         ? '<span style="background:linear-gradient(135deg,var(--a),var(--gst));color:#fff;padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">⚡ Super Admin</span>'
         : isAdm ? '<span style="background:var(--as);color:var(--a);padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">⚡ Admin</span>'
         : u.approved ? '<span style="background:var(--oks);color:var(--ok);padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">✓ Agent</span>'

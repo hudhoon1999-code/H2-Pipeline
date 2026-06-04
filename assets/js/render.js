@@ -227,6 +227,7 @@ function bindPage() {
   else if (STATE.page==='shops') bindShops();
   else if (STATE.page==='items') bindItems();
   else if (STATE.page==='map') bindMapPage();
+  else if (STATE.page==='agents' && STATE.isAdmin) loadUsers();
   else if (STATE.page==='platform') {
     if (typeof _platformDetail !== 'undefined' && _platformDetail) loadPlatformPayments(_platformDetail);
     else loadPlatformOrgs();
