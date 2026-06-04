@@ -144,7 +144,7 @@ function renderDesktopShell() {
     ]},
   ];
 
-  const biz = db.get('bizProfile',{name:'H2 Line'});
+  const biz = db.get('bizProfile',{name:'Lotus Fihaara'});
   const sidebar = '<div id="ds">' +
     '<div id="ds-logo">' +
       '<img src="'+LOGO_AUTH+'" style="height:38px;width:auto;object-fit:contain;max-width:110px" alt="H2 Line">' +

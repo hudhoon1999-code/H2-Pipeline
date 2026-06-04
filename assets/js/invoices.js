@@ -224,7 +224,7 @@ function generateInvoicePDF(inv) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  const biz = db.get('bizProfile', {name:'H2 Line',address:"Male', Maldives",tel:'',tin:'',bank:''});
+  const biz = db.get('bizProfile', {name:'Lotus Fihaara',address:"Male', Maldives",tel:'',tin:'',bank:''});
   const shop = STATE.shops.find(s => normShopName(s.name) === normShopName(inv.shopName)) || {};
   const base = inv.items.reduce((a, i) => a + saleBaseTotal(i), 0);
   const gstTot = inv.items.reduce((a, i) => a + saleGstTotal(i), 0);
@@ -242,7 +242,7 @@ function generateInvoicePDF(inv) {
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text(biz.name || 'H2 Line', M + 4, y + 7);
+  doc.text(biz.name || 'Lotus Fihaara', M + 4, y + 7);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   if (biz.address) doc.text(biz.address, M + 4, y + 12);

@@ -42,7 +42,7 @@ function renderSettings() {
     '<div style="display:flex;gap:6px"><button class="chip' + (!STATE.dark?' on':'') + '" onclick="setTheme(false)">' + IC.sun + ' Light</button><button class="chip' + (STATE.dark?' on':'') + '" onclick="setTheme(true)">' + IC.moon + ' Dark</button></div></div></div>' +
     '<div class="card" style="margin-bottom:12px"><div class="st" style="margin-bottom:12px">Business Profile <span style="font-size:10px;color:var(--t3);font-weight:400">— appears on PDF invoices</span></div>' +
     (() => {
-      const biz = db.get('bizProfile',{name:'H2 Line Distribution',address:'Male\', Maldives',tel:'',tin:'',bank:''});
+      const biz = db.get('bizProfile',{name:'Lotus Fihaara',address:'Male\', Maldives',tel:'',tin:'',bank:''});
       return '<div class="fg">' +
         '<div class="iw"><label class="il">Company Name</label><input id="biz-name" class="inp" value="' + (biz.name||'').replace(/"/g,'&quot;') + '" placeholder="Your company name"></div>' +
         '<div class="iw"><label class="il">Address</label><input id="biz-addr" class="inp" value="' + (biz.address||'').replace(/"/g,'&quot;') + '" placeholder="Male\', Maldives"></div>' +

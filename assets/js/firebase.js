@@ -53,7 +53,7 @@ async function _resolveOrg(fbUser) {
     const inviteCode = Math.random().toString(36).slice(2,8).toUpperCase();
     const orgRef = _fbDb.collection('orgs').doc(orgId);
     try {
-      await orgRef.set({name:'H2 Line',ownerId:fbUser.uid,inviteCode,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await orgRef.set({name:'Lotus Fihaara',ownerId:fbUser.uid,inviteCode,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
       const oldSnap = await _fbDb.collection('shared').doc('data').get();
       if (oldSnap.exists) { await orgRef.collection('appdata').doc('main').set({...oldSnap.data()}); showToast('✓ Data migrated to your organization'); }
       await _fbDb.collection('users').doc(fbUser.uid).set({orgId},{merge:true});
