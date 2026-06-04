@@ -38,7 +38,7 @@ function renderPlatformPage() {
   if (!STATE.isSuperAdmin) return renderDashboard();
   if (_platformDetail) return _renderPlatformDetail(_platformDetail);
 
-  const cos = _platformOrgs.filter(o => o.ownerId !== STATE.user?.id);
+  const cos = _platformOrgs;
   const active    = cos.filter(o => (o.status==='active'||!o.status) && !_isOverdue(o)).length;
   const overdue   = cos.filter(o => _isOverdue(o)).length;
   const suspended = cos.filter(o => o.status==='suspended').length;
@@ -85,7 +85,7 @@ function _renderOrgList() {
   if (!_platformOrgs.length) {
     return '<div class="empty"><div class="eico">🏢</div><div class="etit">No companies yet</div><div class="esub">Organizations appear here when admins sign up</div></div>';
   }
-  let orgs = _platformOrgs.filter(o => o.ownerId !== STATE.user?.id);
+  let orgs = [..._platformOrgs];
 
   if (_platformFilter==='active')    orgs = orgs.filter(o=>(o.status==='active'||!o.status)&&!_isOverdue(o));
   else if (_platformFilter==='overdue')   orgs = orgs.filter(o=>_isOverdue(o));
@@ -112,8 +112,9 @@ function _renderOrgList() {
       const nb=o.billing?.nextBillDate||'', lp=o.billing?.lastPaidDate||'';
       const nbFmt = nb ? (nb<new Date().toISOString().split('T')[0] ? '<span style="color:var(--warn);font-weight:700">OVERDUE ('+nb+')</span>' : nb) : '<span style="color:var(--t3)">Not set</span>';
       const joined = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-      return '<div class="card chov" style="cursor:pointer;'+(o.status==='suspended'?'border-left:3px solid var(--err)':_isOverdue(o)?'border-left:3px solid var(--warn)':'')+'" onclick="viewPlatformOrg(\''+o.id+'\')">' +
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
+      const safeName = esc(o.name||'Unnamed').replace(/'/g,'&#39;');
+      return '<div class="card" style="cursor:pointer;'+(o.status==='suspended'?'border-left:3px solid var(--err)':_isOverdue(o)?'border-left:3px solid var(--warn)':'')+'" onclick="viewPlatformOrg(\''+o.id+'\')">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
             '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px">' +
               '<span style="font-size:15px;font-weight:800">'+esc(o.name||'Unnamed')+'</span>' +
@@ -130,6 +131,12 @@ function _renderOrgList() {
             '</div>' +
           '</div>' +
           '<div style="color:var(--t3);font-size:18px;flex-shrink:0">›</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:7px" onclick="event.stopPropagation()">' +
+          (o.status==='suspended'
+            ? '<button class="btn" style="background:var(--oks);color:var(--ok);font-size:11px;font-weight:700;height:32px;flex:1" onclick="unsuspendOrg(\''+o.id+'\',\''+safeName+'\')">✓ Resume Access</button>'
+            : '<button class="btn" style="background:var(--errs);color:var(--err);font-size:11px;font-weight:700;height:32px;flex:1" onclick="suspendOrg(\''+o.id+'\',\''+safeName+'\')">⏸ Pause Access</button>') +
+          '<button class="btn bs" style="font-size:11px;height:32px;flex:1" onclick="viewPlatformOrg(\''+o.id+'\')">Details →</button>' +
         '</div>' +
       '</div>';
     }).join('') +
@@ -224,11 +231,19 @@ function _renderPlatformDetail(orgId) {
     '</div>' +
 
     // Payment history + members (loaded async)
-    '<div class="card" id="pf-history-card">' +
+    '<div class="card" style="margin-bottom:14px" id="pf-history-card">' +
       '<div class="sh"><div class="st" id="pf-history-title">📜 Payment History</div>' +
         '<button class="btn bs" style="font-size:11px;padding:5px 10px" onclick="loadPlatformPayments(\''+org.id+'\')">Refresh</button>' +
       '</div>' +
-      '<div id="pf-history"><div style="display:flex;align-items:center;gap:8px;color:var(--t2);font-size:12px"><div style="width:16px;height:16px;border:2px solid var(--as);border-top-color:var(--a);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Loading history…</div></div>' +
+      '<div id="pf-history"><div style="display:flex;align-items:center;gap:8px;color:var(--t2);font-size:12px"><div style="width:16px;height:16px;border:2px solid var(--as);border-top-color:var(--a);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Loading…</div></div>' +
+    '</div>' +
+
+    // Per-company activity log
+    '<div class="card">' +
+      '<div class="sh" style="margin-bottom:10px"><div class="st">📋 Activity Log</div>' +
+        '<button class="btn bs" style="font-size:11px;padding:5px 10px" onclick="loadPlatformActivityLog(\''+org.id+'\')">Refresh</button>' +
+      '</div>' +
+      '<div id="pf-actlog"><div style="display:flex;align-items:center;gap:8px;color:var(--t2);font-size:12px"><div style="width:16px;height:16px;border:2px solid var(--as);border-top-color:var(--a);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Loading…</div></div>' +
     '</div>' +
   '</div>';
 }
@@ -274,6 +289,26 @@ async function loadPlatformMembers(orgId) {
     const idx=_platformOrgs.findIndex(o=>o.id===orgId);
     if(idx>=0){ _platformOrgs[idx].memberCount=members.length; window._fbDb.collection('orgs').doc(orgId).update({memberCount:members.length}).catch(()=>{}); }
   } catch(e){ el.innerHTML='<div style="font-size:12px;color:var(--err)">Error: '+e.message+'</div>'; }
+}
+
+async function loadPlatformActivityLog(orgId) {
+  const el = document.getElementById('pf-actlog'); if (!el) return;
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--t2);font-size:12px"><div style="width:16px;height:16px;border:2px solid var(--as);border-top-color:var(--a);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Loading…</div>';
+  try {
+    const snap = await window._fbDb.collection('orgs').doc(orgId).collection('appdata').doc('main').get();
+    const log = (snap.exists && snap.data().activityLog) ? snap.data().activityLog : [];
+    if (!log.length) { el.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:4px 0">No activity recorded yet</div>'; return; }
+    const ACT = {login:'🔐',sale_add:'🧾',sale_edit:'✏️',sale_delete:'🗑️',shop_add:'🏪',shop_edit:'✏️',shop_delete:'🗑️',csv_import:'📂',payment_update:'💳',item_add:'📦'};
+    el.innerHTML = '<div style="font-size:10px;color:var(--t2);margin-bottom:8px;font-weight:700">Last '+Math.min(log.length,100)+' events</div>' +
+      log.slice(0,100).map((e,i) => {
+        const ts = e.ts ? new Date(e.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+        return '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;'+(i>0?'border-top:1px solid var(--b)':'')+'">' +
+          '<div style="width:28px;height:28px;border-radius:7px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">'+(ACT[e.type]||'📝')+'</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">'+esc(e.msg||'')+'</div>' +
+          '<div style="font-size:10px;color:var(--t3);margin-top:1px">'+ts+(e.userName?' · '+esc(e.userName):'')+'</div></div>' +
+        '</div>';
+      }).join('');
+  } catch(e) { el.innerHTML = '<div style="font-size:12px;color:var(--err)">Error: '+e.message+'</div>'; }
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────

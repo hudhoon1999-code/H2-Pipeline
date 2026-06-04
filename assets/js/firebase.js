@@ -19,6 +19,7 @@ async function _loadOrgData() {
       STATE.agents = d.agents||[]; STATE.targets = d.targets||[]; STATE.checkins = d.checkins||[]; STATE.currency = d.currency||'MVR';
       db.set('sales',STATE.sales); db.set('items',STATE.items); db.set('shops',STATE.shops);
       db.set('agents',STATE.agents); db.set('targets',STATE.targets); db.set('checkins',STATE.checkins);
+      if (d.activityLog) db.set('activityLog', d.activityLog);
     } else if (STATE.isAdmin) { await window.saveToFirestore(); }
   } catch(e) {
     console.warn('Firestore load:',e.message);
@@ -140,7 +141,7 @@ async function initFirebase() {
     if(!STATE.isAdmin||!_fbDb||!STATE.orgId) return;
     const ref=_orgDataRef(); if(!ref) return;
     try {
-      await ref.set({sales:STATE.sales,items:STATE.items,shops:STATE.shops,agents:STATE.agents||[],targets:STATE.targets||[],checkins:STATE.checkins||[],currency:STATE.currency||'MVR',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await ref.set({sales:STATE.sales,items:STATE.items,shops:STATE.shops,agents:STATE.agents||[],targets:STATE.targets||[],checkins:STATE.checkins||[],currency:STATE.currency||'MVR',activityLog:db.get('activityLog',[]).slice(0,300),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       db.set('syncPending',false);
     } catch(e){ db.set('syncPending',true); console.warn('Firestore save:',e.message); }
   };

@@ -230,7 +230,9 @@ function bindPage() {
   else if (STATE.page==='map') bindMapPage();
   else if (STATE.page==='agents' && STATE.isAdmin) loadUsers();
   else if (STATE.page==='platform') {
-    if (typeof _platformDetail !== 'undefined' && _platformDetail) loadPlatformPayments(_platformDetail);
-    else loadPlatformOrgs();
+    if (typeof _platformDetail !== 'undefined' && _platformDetail) {
+      loadPlatformPayments(_platformDetail);
+      loadPlatformActivityLog(_platformDetail);
+    } else loadPlatformOrgs();
   }
 }
