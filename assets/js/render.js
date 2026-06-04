@@ -25,7 +25,7 @@ function _syncModal(root) {
 function _patchDesktop(root) {
   // Recompute badge counts and sync sidebar state without DOM replacement
   const imap = {};
-  STATE.sales.forEach(s => { const k = s.invoiceId||(s.shopName+'-'+s.date); if(!imap[k]) imap[k]={f:0,p:0}; imap[k].f += saleFinalTotal(s); if(s.paymentStatus==='Paid') imap[k].p += saleFinalTotal(s); });
+  getVisibleSalesForUser().forEach(s => { const k = s.invoiceId||(s.shopName+'-'+s.date); if(!imap[k]) imap[k]={f:0,p:0}; imap[k].f += saleFinalTotal(s); if(s.paymentStatus==='Paid') imap[k].p += saleFinalTotal(s); });
   const pendingCnt = Object.values(imap).filter(i => i.p < i.f && i.f > 0).length;
   const alertsCnt  = getAlerts().filter(a => !a.done && a.dueDate && a.dueDate <= new Date().toISOString().split('T')[0]).length;
   document.querySelectorAll('#ds-nav .snb').forEach(b => {
@@ -97,8 +97,9 @@ function render() {
 
 function renderDesktopHeader() {
   const labels = {dashboard:'Dashboard',sales:'Sales History',invoices:'Invoices',report:'Reports',shops:'Shops',items:'Items',agents:'Agents',importexport:'Import / Export',settings:'Settings',pending:'Pending Payments',alerts:'Alerts',activitylog:'Activity Log',platform:'Platform Admin'};
-  const tot  = STATE.sales.reduce((a,r) => a + saleFinalTotal(r), 0);
-  const pend = STATE.sales.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + saleFinalTotal(r), 0);
+  const _vs  = getVisibleSalesForUser();
+  const tot  = _vs.reduce((a,r) => a + saleFinalTotal(r), 0);
+  const pend = _vs.filter(r => r.paymentStatus === 'Pending').reduce((a,r) => a + saleFinalTotal(r), 0);
   const pageLabel = labels[STATE.page] || STATE.page;
   return '<div id="dm-header">' +
     '<h2>' + pageLabel + '</h2>' +
@@ -115,7 +116,7 @@ function renderDesktopHeader() {
 function renderDesktopShell() {
   const pendingCount = (() => {
     const imap={};
-    STATE.sales.forEach(s=>{const k=s.invoiceId||(s.shopName+'-'+s.date);if(!imap[k])imap[k]={f:0,p:0};imap[k].f+=saleFinalTotal(s);if(s.paymentStatus==='Paid')imap[k].p+=saleFinalTotal(s);});
+    getVisibleSalesForUser().forEach(s=>{const k=s.invoiceId||(s.shopName+'-'+s.date);if(!imap[k])imap[k]={f:0,p:0};imap[k].f+=saleFinalTotal(s);if(s.paymentStatus==='Paid')imap[k].p+=saleFinalTotal(s);});
     return Object.values(imap).filter(i=>i.p<i.f&&i.f>0).length;
   })();
   const alertsDue = getAlerts().filter(a=>!a.done&&a.dueDate&&a.dueDate<=new Date().toISOString().split('T')[0]).length;
